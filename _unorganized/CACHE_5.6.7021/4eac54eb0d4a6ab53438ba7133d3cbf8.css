@@ -1,0 +1,46 @@
+@import url(msntv:/Shared/CSS/Base.css);
+
+a:link,a:visited,a:hover,a:active{color:#1a2958;text-decoration:none}
+body,td,pre,textarea{font-family:segoe tv,Arial,Verdana;font-size:18px;color:#1d1d1d;}
+body{margin:0 0 0 0;background-color:#cbe0f3;}
+table,tr,td{padding:0 0 0 0;margin:0 0 0 0;border-collapse:collapse;}
+tr.r{height:26px;}
+textarea{overflow-y:visible;}
+pre{margin:0 0 0 0;padding:0 0 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+#scrollArea{position:absolute;top:76px;left:0px;width:73%;height:308px;bottom:0px;overflow-y:scroll;overflow-x:hidden;text-overflow:ellipsis;behavior:url(/mail/res/ScrollingDIV.htc)}
+.description{padding-left:15px;padding-right:22px;width:100%;}
+.smallfont{font-size:16px;}
+
+#head,#hdimg,#hdlf,.leftbody{position:absolute;left:0px;top:0px}
+#head{height:69px;width:100%;overflow:hidden;background-color:#0E52B3}
+#hdlf{top:5px;width:70%;padding-left:15px;font-size:21px;color:#f7f7f7}
+#hdrt{top:11px;width:30%;padding-right:8px;right:0px;position:absolute;font-size:16px;color:#e6e6ec}
+#title{padding-left:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:350px}
+#setting:link,#setting:visited,#setting:hover,#setting:active{color:#e6e6ec;text-decoration:none}
+#hdset{float:right;width:80px;padding-right:15px;direction:rtl}
+#help{float:right;width:63px}
+#hlpstr{float:left;width:40px;padding-right:4px}
+#hlpimg{float:left;width:20px;height:20px;behavior:url(#default#alphaImageLoader);src:url(msntv:/Shared/Images/Icon_Help_RelatedLink.png)}
+.leftbody{top:76px;width:73%;height:308px;behavior:url(#default#gradient);startColor:#cbe0f3;endcolor:#acc6dc;angle:0;filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#cbe0f3,endColorstr=#acc6dc);}
+
+.menu{position:absolute;top:76px;bottom:0px;right:0px;width:27%;height:308px;padding-left:6px;padding-right:8px;font-size:16px}
+.mnbtn{height:26px;width:100%;display:block;text-align:left;margin: 0 0 4px 0}
+.mntip{position:absolute;bottom:10px;width:100%;color:#434343}
+#mnpnd,.mnpn{float:left;margin-right:10px}
+#mnpnd{width:0px;height:14px;margin-top:2px;border-left:1px solid #2b4f93;border-right:1px solid #ffffff}
+
+a.mb {width:100%;margin:0 0 4px 0;cursor:hand}
+table.mb {height:26px;width:100%}
+td.ml,td.mr {height:26px;width:4px}
+td.ml,td.mm,td.mr {behavior:url(#default#alphaImageLoader)}
+td.ml {src:msntv:/Shared/Images/CommandButtonGlobalLeftEdge.png}
+td.mr {src:msntv:/Shared/Images/CommandButtonGlobalRightEdge.png}
+td.mm {src:msntv:/Shared/Images/CommandButtonGlobalMiddleStretch.png}
+span.mb {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:129px;color:#07214d;font-size:16px;padding:0px 3px;}
+span.dpimg {float:right;width:20px;height:26px;behavior:url(#default#alphaImageLoader);src:url(msntv:/Shared/Images/DropDownCustomDownArrow.png);}
+
+#percentageLeft{width:4px;height:16px;background-image:url(ProgressBarLeftEdge.png);}
+#percentageRight{width:4px;height:16px;background-image:url(ProgressBarRightEdge.png);}
+#percentageMiddleBack{background-image:url(ProgressBarCustomMiddleStretch.png);}
+#percentageMiddleFill{height:12px;margin-left:-2px;margin-right:-2px;position:relative;overflow:hidden;background-image:url(msntv:/Shared/Images/ProgressBarCustomFill.png);}

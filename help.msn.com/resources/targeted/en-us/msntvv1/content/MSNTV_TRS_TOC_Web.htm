@@ -1,0 +1,53 @@
+<html xmlns:msntv>
+<head>
+	<title>Web help table of contents</title>
+	<?IMPORT namespace="msntv" implementation="CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+
+<body>
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Web" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop />
+
+
+<div id="scrollArea">
+
+	<!-- Go to site -->
+	<div class="topic">Going to a Web page</div>
+	<a id="typewwwWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_Typewww.htm');">Using the <b>Type www</b> key</a><br>
+	<a id="searchWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_Search.htm');">Searching for Web pages</a><br>
+        <a id="recentWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_Recent.htm');">Using the <b>Recent</b> key</a><br>
+        <a id="savefavsWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_SaveFavs.htm');">Saving a Web page as a favorite</a>
+
+
+	<!-- Viewing -->
+	<hr>
+	<div class="topic">Viewing Web pages</div>
+	<a id="navpageWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_NavPage.htm');">Getting around on a Web page</a><br>
+	<a id="resizepageWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_ResizePage.htm');">Using the <b>Resize Page</b> key</a><br>
+        <a id="textresizeWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_TextResize.htm');">Changing text size</a><br>
+        <a id="findwordWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_FindWord.htm');">Finding a word on a Web page</a>
+
+	<!-- Misc. -->
+	<hr>
+	<div class="topic">More</div>
+	<a id="printWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_Print.htm');">Printing a Web page</a><br>
+        <a id="clearhistoryWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_ClearHistory.htm');">Deleting your list of recently viewed pages</a><br>
+        <a id="cookiesWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_Cookies.htm');">Deleting cookies</a><br>
+        <a id="cookiesWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_Restrict.htm');">Restricting access to the Web</a><br>
+        <a id="cookiesWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_SendPage.htm');">Sending a Web address in an e-mail</a><br>
+        <a id="cookiesWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_MenuKey.htm');">Using the <b>Menu</b> key<a><br><br>
+</div>
+
+<div id="sideBar">
+	<!-- Feature menu always returns to the page that called this one: the main table of contents or a feature page -->
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer();" class=sideBarButton id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+
+
+</body>
+</html>

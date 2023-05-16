@@ -1,0 +1,238 @@
+<html xmlns:msntv>
+<head>
+	<title>Main help table of contents</title>
+	<?IMPORT namespace="msntv" implementation="CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+<script>
+function goToSystemInfo()
+
+{
+	if (window.external.SafeGetServiceURL("SystemInfo::home") != null &&
+        	window.external.SafeGetServiceURL("SystemInfo::home") != "" )
+                window.location = window.external.SafeGetServiceURL("SystemInfo::home");
+        else
+        	alert("System info not available");
+}
+
+</script>
+</head>
+
+<body>
+
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Index" showScrollTop />
+
+<div id="scrollArea">
+
+	<!-- Home -->
+	<div class="topic">Home page</div>
+
+	<a id="fwdEmailID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Home_Intro.htm');">Home page basics</a><br>
+	<a id="sendEmailID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Home_Centers.htm');">Centers</a><br>
+	<a id="photoEmailID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_Search.htm');">Search</a>
+
+        <div class="moreTopicsLink"><span class="customBullet"><a id="moreMailTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Home.htm')">More topics</a></span></div>
+
+	<!-- Mail -->
+        <hr>
+	<div class="topic">Mail</div>
+
+	<a id="fwdEmailID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Email_Reading.htm');">Reading your e-mail</a><br>
+	<a id="sendEmailID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Email_Writing.htm');">Sending an e-mail message</a><br>
+	<a id="photoEmailID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Email_AddressBook.htm');">Using the Address book</a>
+
+	<div class="moreTopicsLink"><span class="customBullet"><a id="moreMailTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Email.htm')">More topics</a></span></div>
+
+	<!-- Messenger -->
+	<hr>
+	<div class="topic">Messenger</div>
+	
+	<a id="sendMsgrID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Messenger_StartConv.htm');">Starting a conversation</a><br>
+	<a id="addontactMsgrID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Messenger_AddContact.htm');">Adding a contact</a><br>
+	<a id="allowcontactMsgrID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Messenger_Block.htm');">Allowing and blocking contacts</a>
+
+	<div class="moreTopicsLink"><span class="customBullet"><a id="moreIMTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Msgr.htm')">More topics</a></span></div>
+
+	<!-- Photos -->
+	<hr>
+	<div class="topic">Photos</div>
+
+        <a id="viewPhotoID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Photos_Intro.htm');">Photos basics</a><br>
+        <a id="viewPhotoID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Photos_Albums.htm');">Saving photos in albums</a><br>
+        <a id="viewPhotoID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Photos_Slideshow.htm');">Watching a slideshow</a><br>
+
+	<div class="moreTopicsLink"><span class="customBullet"><a id="morePhotosTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Photos.htm')">More topics</a></span></div>
+
+        <!-- Music -->
+	<hr>
+	<div class="topic">Music</div>
+
+        <a id="viewPhotoID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Music_Intro_Online.htm');">Music basics</a><br>
+	<a id="searchChatID" class="topiclink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Music_MemoryCard.htm');">Listening to music from a memory card</a><br>
+        <a id="chattingChatID" class="topiclink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Music_Playlist.htm');">Adding tracks to your Song List</a><br>
+
+	<div class="moreTopicsLink"><span class="customBullet"><a id="morePhotosTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Music.htm')">More topics</a></span></div>
+
+        <!-- Radio -->
+	<hr>
+	<div class="topic">Radio</div>
+
+        <a id="viewPhotoID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Radio_Intro.htm');">Radio basics</a><br>
+        <a id="viewPhotoID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Radio_PlayStation.htm');">Playing a station</a><br>
+        <a id="viewPhotoID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Radio_AddStation.htm');">Creating a list of stations</a><br>
+
+	<div class="moreTopicsLink"><span class="customBullet"><a id="morePhotosTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Radio.htm')">More topics</a></span></div>
+
+        <!-- Videos -->
+	<hr>
+	<div class="topic">Videos</div>
+
+        <a id="viewPhotoID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Videos_Intro.htm');">Videos basics</a><br>
+        <a id="viewPhotoID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Videos_MemoryCard.htm');">Watching videos from a memory card</a><br>
+        <a id="chattingChatID" class="topiclink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Videos_VideoService.htm');">Watching MSN Video</a><br>
+
+	<div class="moreTopicsLink"><span class="customBullet"><a id="morePhotosTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Videos.htm')">More topics</a></span></div>
+
+	<!-- Favorites -->
+	<hr>
+	<div class="topic">Favorites</div>
+
+	<a id="saveFavID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Favorites.htm');">Saving favorite Web pages</a><br>
+	<a id="shortcutFavID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Favorites_Shortcut.htm');">Shortcut keys</a><br>
+	<a id="organizeFavID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Favorites_Organize.htm');">Organizing your favorites</a>
+
+	<div class="moreTopicsLink"><span class="customBullet"><a id="moreFavssTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Favs.htm')">More topics</a></span></div>
+
+	<!-- Web -->
+	<hr>
+	<div class="topic">Web</div>
+
+	<a id="gotositeWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_GoToSite.htm');">Going to a Web page</a><br>
+	<a id="recentWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_Recent.htm');">Going to recently visited pages</a><br>
+	<a id="webGoToSiteID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Web_Search.htm');">Searching for a Web page</a><br>
+
+        <div class="moreTopicsLink"><span class="customBullet"><a id="moreChatTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Web.htm')">More topics</a></span></div>
+
+	<!-- Chat -->
+	<hr>
+	<div class="topic">Chat</div>
+
+	<a id="chatNicknameID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Chat_Nickname.htm');">Creating a chat nickname</a><br>
+	<a id="chatChooseID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Chat_Choose.htm');">Choosing a chat room</a><br>
+	<a id="chatChattingID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Chat_Chatting.htm');">Participating in a chat</a><br>
+
+	<div class="moreTopicsLink"><span class="customBullet"><a id="moreChatTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Chat.htm')">More topics</a></span></div>
+
+        <!-- WMP -->
+	<hr>
+	<div class="topic">Windows Media Player</div>
+
+	<a id="playWMPID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_WMP_PlayClip.htm');">Playing video or audio clips</a><br>
+        <a id="hideWMPID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_WMP_Hide.htm');">Hiding the Media Player window</a><br>
+	<a id="formatsWMPID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_WMP_Formats.htm');">Supported file formats</a>
+	
+	<!-- Doc Viewer -->
+	<hr>
+	<div class="topic">Document Viewer</div>
+
+	<a id="playWMPID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_DocViewer_Intro.htm');">Document Viewer basics</a><br>
+	<a id="formatsWMPID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_DocViewer_Formats.htm');">Supported file formats</a>
+
+	<!-- Printing -->
+	<hr>
+	<div class="topic">Printing</div>
+
+	<a id="chatNicknameID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Printing_Setup.htm');">Connecting a printer</a><br>
+	<a id="chatChooseID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Printing_CompatPrinters.htm');">Compatible printers</a><br>
+        <a id="chatChooseID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Printing_PrintPage.htm');">Printing a page</a><br>
+
+<div class="moreTopicsLink"><span class="customBullet"><a id="moreChatTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Printing.htm')">More topics</a></span></div>
+	<!-- Settings -->
+	<hr>
+	<div class="topic">Settings</div>
+
+	<a id="chatNicknameID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Settings_ChangePicture.htm');">Changing your sign-in picture</a><br>
+	<a id="chatChooseID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Settings_Alerts.htm');">Changing Mail or Messenger alerts</a><br>
+	<a id="chatChattingID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Settings_AutoUpdate.htm');">Checking for MSN TV updates</a><br>
+
+        <div class="moreTopicsLink"><span class="customBullet"><a id="moreSettingsTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Settings.htm')">More topics</a></span></div>
+
+        <!-- Home Networking-->
+	<hr>
+	<div class="topic">Connecting to a home network</div>
+
+	<a id="playWMPID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_HomeNet_Intro.htm');">Home network basics</a><br>
+        <a id="playWMPID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_HomeNet_Fileshare.htm');">Setting up file sharing</a><br>
+        <a id="playWMPID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_HomeNet_FolderShare.htm');">Sharing a folder</a><br>
+
+        <div class="moreTopicsLink"><span class="customBullet"><a id="moreSettingsTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_HomeNet.htm')">More topics</a></span></div>
+
+	<!-- Wireless -->
+	<hr>
+	<div class="topic">Wireless connection</div>
+
+	<a id="playWMPID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Wireless_Intro.htm');">Wireless connection basics</a><br>
+        <a id="hideWMPID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Wireless_SelectNetwork.htm');">Selecting a wireless network</a><br>
+	<a id="formatsWMPID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Wireless_EnterSettings.htm');">Entering a WEP key</a>
+
+        <div class="moreTopicsLink"><span class="customBullet"><a id="moreSettingsTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Wireless.htm')">More topics</a></span></div>
+
+	<!-- Your account -->
+	<hr>
+	<div class="topic">Your account</div>
+
+	<a id="chatNicknameID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_UAM_AddUser.htm');">Adding a user to your account</a><br>
+	<a id="chatChooseID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_BILLING_AboutTransferringSingleSubscriptions.htm');">Changing billing information</a><br>
+	<a id="chatChattingID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_UAM_ChangePassword.htm');">Changing your password</a><br>
+
+	<div class="moreTopicsLink"><span class="customBullet"><a id="moreSettingsTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_AcctMgmt.htm')">More topics</a></span></div>
+
+        <!-- Billing -->
+	<hr>
+	<div class="topic">Billing</div>
+
+        <a id="chatNicknameID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_UAM_PrimaryUserBilling.htm');">Who can change billing information</a><br>
+        <a id="chatChattingID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_BILLING_AboutPaymentMethodStatus.htm');">Viewing your billing statement</a><br>
+        <a id="chatChattingID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_BILLING_FAQs.htm');">Frequently asked questions</a><br>
+
+	<div class="moreTopicsLink"><span class="customBullet"><a id="moreSettingsTopicsID" class="moreTopicsLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_TRS_TOC_Billing.htm')">More topics</a></span></div>
+
+        <!-- Hardware -->
+	<hr>
+	<div class="topic">Hardware</div>
+
+	<a id="saveFavID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Keyboard.htm');">Keyboard</a><br>
+	<a id="shortcutFavID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Remote.htm');">Remote control</a><br>
+        <a id="shortcutFavID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_InternetPlayer.htm');">Internet & Media Player</a><br>
+         
+	<!-- Misc -->
+	<hr>
+	<div class="topic">More</div>
+
+        <a id="saveFavID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Email_Accents.htm');">Typing accented characters</a><br>
+        <a id="sysInfoID" class="topicLink" href="javascript:goToSystemInfo();">System Info</a><br><br>
+</div>
+
+<div id="sideBar">
+	<!-- Main menu always returns to the service feature that called it -->
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer();" class="sideBarButton" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>
+
+<script language="javascript" type="text/javascript">
+    var RF= escape(parent.document.referrer);  
+    var logo = 'http://c.msn.com/c.gif?DI=1455&PI=68206&';
+    var cImage = 'http://c.msn.com/c.gif?DI=1455&PI=68206&TP=http://msntv.msn.com/';
+// ********************************************************    
+    var taxonomy_data ='PASTEHERE1';  
+// ********************************************************
+    var hello = '<img width=0 height=0 src=\"' + cImage + taxonomy_data + '&RF='+RF+'\" >';
+    document.write(hello);
+</script> 
+
+

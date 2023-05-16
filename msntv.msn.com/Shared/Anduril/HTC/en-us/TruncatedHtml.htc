@@ -1,0 +1,97 @@
+<!-- ---------------------------------------------------------------------
+//
+//  Copyright 2004 Microsoft Corporation.  All Rights Reserved.
+//
+//  File:         Slideshow.htc
+//
+//  Description:  
+//
+//-------------------------------------------------------------------- -->
+
+<PUBLIC:COMPONENT tagname="TruncatedHtml" lightweight=true>
+
+	<PUBLIC:PROPERTY NAME="width" />
+	<PUBLIC:PROPERTY NAME="height" />
+	<PUBLIC:PROPERTY NAME="lineHeight" />
+	<PUBLIC:PROPERTY NAME="text" />
+	
+	<PUBLIC:ATTACH EVENT="oncontentready" HANDLER="onContentReady" />
+	<PUBLIC:ATTACH EVENT="ondocumentready" HANDLER="onDocReady" />
+	<PUBLIC:ATTACH EVENT="onpropertychange" HANDLER="onPropChange" />
+
+	<SCRIPT LANGUAGE="jscript">
+	
+		function onContentReady()
+		{
+		}
+
+		function onDocReady()
+		{
+			// draw the HTML
+			element.innerHTML
+				= "<div id=\"gauge" + uniqueID + "\" style=\"position:absolute;top:500;left:600;display:none\"></div>"
+				+ "<div id=\"output" + uniqueID + "\" style=\"width:" + width + ";height:" + height + ";line-height:" + lineHeight + "\"></div>"
+				;
+
+			// get references to the just-drawn objects
+			var thisGauge = element.document.all["gauge" + uniqueID];
+			var thisOutput = element.document.all["output" + uniqueID];
+				
+			// draw the output
+			thisOutput.innerHTML = getTruncatedText(thisGauge);
+		}
+
+		function onPropChange()
+		{
+		}
+
+		function getTruncatedText(gaugeOb)
+		{
+			gaugeOb.style.display = "block";
+			gaugeOb.style.width = width;
+			gaugeOb.style.width = width;
+			gaugeOb.style.height = height;
+			gaugeOb.style.lineHeight = lineHeight;
+			gaugeOb.innerHTML = text;
+			
+			var newHtml = "";
+			if (gaugeOb.offsetHeight == height)
+			{
+				newHtml = text;
+			}
+			else
+			{
+				gaugeOb.style.height = height;
+				gaugeOb.innerHTML = "";
+
+				// go through all words until the object goes beyond its natural height
+				var wordsThatFit;
+				var w = text.split(" ");
+				for (var i=0; i<w.length; i++)
+				{
+					gaugeOb.innerHTML += w[i] + " ";
+					if (gaugeOb.offsetHeight > height)
+					{
+						wordsThatFit = i-1;
+						break;
+					}
+				}
+				
+				for (var i=0; i<wordsThatFit; i++)
+				{
+					newHtml += w[i] + " ";
+				}
+				
+				// remove the last space (and comma); add the ellipsis
+				var lastChar = (newHtml.charAt(newHtml.length-2) == ",") ? newHtml.length-2 : newHtml.length-1;
+				newHtml = newHtml.substring(0,lastChar);
+				newHtml += "&#133;";
+				
+			}
+			gaugeOb.style.display = "none";
+			return newHtml;
+			
+		}
+	</SCRIPT>
+
+</PUBLIC:COMPONENT>

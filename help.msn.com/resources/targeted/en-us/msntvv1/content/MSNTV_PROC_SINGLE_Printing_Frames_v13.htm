@@ -1,0 +1,57 @@
+<html xmlns:msntv>
+<head>
+	<title>Printing sections of a page</title>
+	<?IMPORT namespace="msntv" implementation="CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Printing sections of a page" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="false" />
+
+<div id="nonScrollArea">
+	<table class="textPlusGraphics">
+                <tr>
+                        <td>
+         Some Web pages are made up of sections (sometimes called frames). For example, there might be an area at the top of the screen that provides links to other pages, and another area that contains text and graphics. 
+	<p>
+	<p>
+	If a Web page is set up this way, you can print just the sections you want, rather than the whole page.
+	</p>
+	</p>
+        </span>
+                        </td>
+                        <td>
+                                <img src="printframes1v13.jpg" width="244">
+                        </td>
+                </tr>
+        </table>
+
+        </span>
+</div>
+
+<div id="buttonBar">
+
+
+
+        <msntv:CustomButton onclick="javascript:goToPageAndPassPriorOrigin('MSNTV_PROC_SINGLE_Printing_Frames_2.htm');" id="continueID" label="Continue" />
+	<script>document.all("continueID").focus();</script>
+        <msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+
+</div>
+
+</body>
+</html>
+
+<script language="javascript" type="text/javascript">
+    var RF= escape(parent.document.referrer);  
+    var logo = 'http://c.msn.com/c.gif?DI=1455&PI=68206&';
+    var cImage = 'http://c.msn.com/c.gif?DI=1455&PI=68206&TP=http://msntv.msn.com/';
+// ********************************************************    
+    var taxonomy_data ='PASTEHERE1';  
+// ********************************************************
+    var hello = '<img width=0 height=0 src=\"' + cImage + taxonomy_data + '&RF='+RF+'\" >';
+    document.write(hello);
+</script> 

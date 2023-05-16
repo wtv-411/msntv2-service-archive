@@ -1,0 +1,70 @@
+<html xmlns:msntv>
+<head>
+	<title>View subscriptions</title>
+	<?IMPORT namespace="msntv" implementation="CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+        <?IMPORT namespace="msntv" implementation="ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Viewing your subscription information" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+        To view your subscriptions, follow these steps:
+<ol>
+<li>On the My billing account page, choose <b>View my subscriptions</b>.</li>
+<li>Choose the subscription you want to view.</li>
+<li>Review the information on the screen.</li>
+</ol>
+	Your subscription status will be one of the following:
+<ul>
+	<li> <b>Enabled:</b> Your subscription is active.</li>
+	<li><b>Suspended:</b> Your access to subscription services has been removed. You may not have paid the subscription fee. Do one of the following:</li>
+        <p>
+        <p>
+        <ul>
+	<li>Pay the subscription fee.</li>
+	<li>Update the payment method, or transfer the subscriptions to a new credit card.</li>
+	<li>Contact Customer Support:</li><br>
+        <span class="customBullet"><a id="pageresizeWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_BILLING_HowDoIContactCustomerSupport.htm');">Contacting Customer Support</a>
+	</span>
+        </p>
+        </p>
+	<li><b>Expired:</b> Your access to subscription services has been removed because the subscription is expired. A subscription can expire if you cancel your subscription within the subscription grace period.</li>
+        <p>
+        <p>
+        </ul>
+        <b>Notes</b>
+        <ul>
+	<li>Choose <b>Renew Subscription</b> to renew the subscription you're viewing.</li>
+	<li>Contact Customer Support to learn why your subscription has expired.</li>
+        </ul>
+        </p>
+        </p>
+
+	</span>
+
+</div>
+
+<div id="sideBar">
+        <msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>
+
+<script language="javascript" type="text/javascript">
+    var RF= escape(parent.document.referrer);  
+    var logo = 'http://c.msn.com/c.gif?DI=1455&PI=68206&';
+    var cImage = 'http://c.msn.com/c.gif?DI=1455&PI=68206&TP=http://msntv.msn.com/';
+// ********************************************************    
+    var taxonomy_data ='Help/TOC_Settings/BILLING_ViewYourSubscriptions.htm&PS=87340';  
+// ********************************************************
+    var hello = '<img width=0 height=0 src=\"' + cImage + taxonomy_data + '&RF='+RF+'\" >';
+    document.write(hello);
+</script> 

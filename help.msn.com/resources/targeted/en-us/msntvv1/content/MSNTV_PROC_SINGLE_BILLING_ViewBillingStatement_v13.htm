@@ -1,0 +1,56 @@
+
+<html xmlns:msntv>
+<head>
+	<title>View statement</title>
+	<?IMPORT namespace="msntv" implementation="CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+        <?IMPORT namespace="msntv" implementation="ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Viewing your billing statement" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+        To view your online billing statement, follow these steps:
+        <ol>
+	<li>On the My billing account page, choose <b>View my monthly statement</b>.</li>
+	<li>If you have more than one credit card, select the credit card whose monthly statement you want to view, and then choose <b>Continue</b>.</li>
+        </ol>
+	<b>Notes</b>
+        <ul>
+	<li>Choose <b>Details</b> next to your subscription's line items to view usage events such as dial-up access. Only subscriptions with usage events will display line items.</li>
+	<li>Choose <b>Select a different payment method</b> to view details for another credit card.</li>
+        </ul>
+	<p>
+        <p>
+	<b>Related topic</b>
+        <br>
+	<span class="customBullet"><a id="pageresizeWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Billing_WhenBilled.htm');">When do I get billed?</a>
+	</span>
+
+	</span>
+
+</div>
+
+<div id="sideBar">
+        <msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>
+
+<script language="javascript" type="text/javascript">
+    var RF= escape(parent.document.referrer);  
+    var logo = 'http://c.msn.com/c.gif?DI=1455&PI=68206&';
+    var cImage = 'http://c.msn.com/c.gif?DI=1455&PI=68206&TP=http://msntv.msn.com/';
+// ********************************************************    
+    var taxonomy_data ='PASTEHERE1';  
+// ********************************************************
+    var hello = '<img width=0 height=0 src=\"' + cImage + taxonomy_data + '&RF='+RF+'\" >';
+    document.write(hello);
+</script> 

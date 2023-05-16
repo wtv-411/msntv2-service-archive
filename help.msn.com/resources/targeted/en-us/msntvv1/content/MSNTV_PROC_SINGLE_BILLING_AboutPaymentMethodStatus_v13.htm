@@ -1,0 +1,89 @@
+<html xmlns:msntv>
+<head>
+	<title>Payment method status</title>
+	<?IMPORT namespace="msntv" implementation="CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+        <?IMPORT namespace="msntv" implementation="ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Viewing your billing information" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+When you view or add a credit card, Microsoft Online Services immediately checks to see if it is valid, and then displays the status of the credit card information. The status may be any of the following:
+<ul>
+<li><b>Active:</b> The credit card information is valid and current.</li>
+
+<li><b>Declined:</b> If your credit card has Declined status, it was declined for one of several reasons. To remove the Declined status from your credit card, do one of the following:</li>
+<ul>
+<li>Follow the instructions in <span class="customBullet"><a id="pageresizeWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_BILLING_AboutTransferringSingleSubscriptions.htm');">Transfer subscriptions and balances</a>
+</span></li>
+<li>Check with your bank or credit card company to make sure the credit card is usable.</li>
+<li>Contact Customer Support.</li> <span class="customBullet"><a id="pageresizeWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_BILLING_HowDoIContactCustomerSupport.htm');">Contacting Customer Support</a>
+</span></li>
+</ul>
+<li><b>Expiration pending:</b> The credit card will expire soon. You need to update the credit card information with the new expiration date. To update the expiration date:</li>
+</ul>
+<ol>
+<li>Choose <b>View and update my billing payment information</b> on the My billing account page.</li>
+<p>
+<p>
+If you have more than one credit card, select the credit card you need to update, and then choose <b>Continue.</b></li>
+</p>
+</p>
+<li>Choose <b>Update our records with your new expiration date</b> on the My billing information page.</li>
+<li>Select the new expiration date for your card, and then choose <b>Save</b>.</li>
+<li>Choose <b>OK</b> on the confirmation page.</li>
+</ol>
+<ul>
+<li><b>Expired:</b> The credit card has expired. You need to update the credit card information with the new expiration date. To update the expiration date:</li>
+</ul>
+<ol>
+<li>Choose <b>View and update my billing payment information</b> on the My billing account page.</li>
+<p>
+<p>
+If you have more than one credit card, select the credit card to which you want to transfer your subscriptions and balances, and then choose <b>Continue</b>.</li>
+</p>
+</p>
+<li>Choose <b>Update expiration date</b> on the My billing information page.</li>
+<li>Select the new expiration date for the credit card, and then choose <b>Save</b>.</li>
+<li>Choose <b>OK</b> on the confirmation page.</li>
+</ol>
+<b>Note</b>
+<p>
+<p>
+Microsoft Online Services accepts Visa, MasterCard, Discover, or American Express credit card payments. Microsoft Online Services does not accept payment by check or money order.
+</p>
+</p>
+<p>
+<p>
+<b>Related topic</b>
+<br>
+ <span class="customBullet"><a id="pageresizeWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_BILLING_ViewBillingStatement.htm');">View your billing statement</a>
+ </span>
+
+</span>
+</div>
+
+<div id="sideBar">
+        <msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>
+
+<script language="javascript" type="text/javascript">
+    var RF= escape(parent.document.referrer);  
+    var logo = 'http://c.msn.com/c.gif?DI=1455&PI=68206&';
+    var cImage = 'http://c.msn.com/c.gif?DI=1455&PI=68206&TP=http://msntv.msn.com/';
+// ********************************************************    
+    var taxonomy_data ='Help/TOC_Settings/BILLING_AboutPaymentMethodStatus.htm&PS=87341';  
+// ********************************************************
+    var hello = '<img width=0 height=0 src=\"' + cImage + taxonomy_data + '&RF='+RF+'\" >';
+    document.write(hello);
+</script>

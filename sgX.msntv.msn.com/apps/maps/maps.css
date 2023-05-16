@@ -1,0 +1,186 @@
+@import url(msntv:/Shared/CSS/SynchMan.css);
+@import url(msntv:/Shared/CSS/Settings.css);
+
+body{margin:0 0 0 0;background-color:#E8E9EA;}
+body,td,pre,textarea{font-family:segoe tv,Arial,Verdana;font-size:18px;color:#1d1d1d;}
+a:link,a:visited,a:hover,a:active{color:#14224B;text-decoration:none}
+
+table.dropTable, table.dirTable {margin-top:-5px;margin-bottom:15px;border-collapse:collapse;}
+table.dropTable td{padding: 0px 0px 0px 0px;}
+table.dirTable td.textcell {vertical-align:top;padding: 0px 8px 5px 0px;font-weight:bold;}
+table.dirTable td.buttoncell {vertical-align:top;}
+
+#header
+{
+	position: absolute;
+	background: url(images/MainTitleBG.jpg) no-repeat;
+	background-color: #1C5798;
+	top: 0px;
+	left: 0px;
+	height: 56px;
+	width: 100%;
+}
+
+#hdleft{position:absolute;bottom:10;left:10;font:21;width:470;vertical-align:bottom;color:#b6e5fd;font-weight:bold;}
+#hdrt{font:21;color:#f2f2f2;}
+
+#mainDiv
+{
+	position:absolute;
+	top:56;
+	left:0;
+	height:327;
+	width:560;
+	padding-top:15;
+	padding-left:15;
+	padding-right:15;
+}
+
+#mainDirDiv
+{
+	position:absolute;
+	top:56;
+	left:0;
+	height:327;
+	width:560;
+	padding-top:15;
+	padding-left:15;
+	padding-right:15;
+}
+
+#mapControl{height:45;width:560;background-image: url(images/MapNavBG.jpg);}
+
+#mainLogo
+{
+	position:absolute;
+	bottom:10;
+	left:10;
+	font:21;
+	width:470;
+	vertical-align:bottom;
+	color:#ffffff;
+}
+
+#mainLogoDiv{height:56;width:560;background-image: url(images/MainTitleBG.jpg);}
+
+#mapContainer{position:relative;width:560px;height:282px;overflow:hidden;}
+
+#mapPanControl
+{
+	position:absolute;
+	top:0;
+	left:0;	
+}
+
+.mapPanLeft
+{
+	position:absolute;
+	top:199;
+	left:2;
+	height:18;
+    width:18;
+    behavior: url(#default#alphaImageLoader);
+    src: url(images/ScrollIndicatorLeftGlobal.png);
+}
+
+.mapPanRight
+{
+	position:absolute;
+	top:199;
+	left:540;
+	height:18;
+    width:18;
+    behavior: url(#default#alphaImageLoader);
+    src: url(images/ScrollIndicatorRightGlobal.png);
+}
+
+.mapPanUp
+{
+	position:absolute;
+	top:58;
+	left:271;
+	height:18;
+    width:18;
+    behavior: url(#default#alphaImageLoader);
+    src: url(images/ScrollIndicatorUpGlobal.png);
+}
+
+.mapPanDown
+{
+	position:absolute;
+	top:317;
+	left:271;
+	height:18;
+    width:18;
+    behavior: url(#default#alphaImageLoader);
+    src: url(images/ScrollIndicatorDownGlobal.png);
+}
+
+#mapZoomControl{position:absolute;bottom:7;left:20;}
+
+#mapImageError
+{
+	position:relative;
+	width:520;
+	top:15;
+	left:15;
+	font:20;
+	color:#110088;
+}
+
+.mapPin
+{
+	padding-left:55px;
+}
+
+.dirLabelText{font:18;color:#0066cc;}
+
+.dirValueText{font:18;color:#000000;}
+
+.dirMainUI{position:relative;width:520px;height:360px;}
+#dirMainMap{position:absolute;width:520px;height:360px;overflow:hidden;}
+
+#mapButtonBar
+{
+	position: absolute;
+    right: 2px;
+	bottom: 10px;
+	width: 540px;
+	text-align: right;
+}
+
+#mapButtonBar msntv\:CustomButton
+{
+	margin-left: 1px;
+}
+
+#mapZoomControl msntv\:CustomButton
+{
+	margin-left: 1px;	
+}
+
+@media print 
+{
+	#mainDirDiv
+	{
+		position:absolute;
+		top:5;
+		left:0;
+		width:560;
+		padding-top:0;
+		padding-left:15;
+		line-height:3;
+		background-color:#ffffff;
+	}
+	
+	#dirLineHolder{visibility:hidden;}
+	
+	table.dirTable {margin-top:0px;}	
+	
+	.routeButton{visibility:hidden;position:absolute;top:0;}
+	
+	.dirMainLogoDiv{visibility:hidden;}
+	
+	#help{visibility:hidden;}
+}
+
