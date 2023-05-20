@@ -12,7 +12,7 @@ If you're interested in learning more about the MSN TV 2 service, I have a [wiki
 
 # Services Archived
 - msntv.msn.com
-    - Home Page (Only dial-up pages fully archived - Broadband home page only has assets saved; Dial-up home background and "Entertainment" icon images are compressed)
+    - Home Page (Only dial-up pages fully archived - Broadband home page only has assets saved; Dial-up home background and "TV Listings" icon images are compressed, and rotating pane for dial-up home has missing images)
 	- Centers (Partially recovered)
 		- Images recovered for "Using MSN TV", Money, News, and Shopping. All other Centers are missing images.
 		- Most pages saved for all centers except Shopping, Radio (both not saved by Wayback Machine), Games, Radio, Sports, and Center settings (not currently included in archive)
