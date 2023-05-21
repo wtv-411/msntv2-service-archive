@@ -19,5 +19,10 @@ If you're interested in learning more about the MSN TV 2 service, I have a [wiki
 - SG (sgX.msntv.msn.com)
 	- Maps (Only search page and some assets saved)
 	- Help (only table of contents saved)
+- Trusted SG (sgX.trusted.msntv.msn.com)
+	- GatePage.aspx (Anduril service script)
+		- `Bootstrap::Authorize` (kickstart.aspx, originally from archive.midnightchannel.net)
+	- Chat (partially recovered)
+		- The original HTML file was retrieved from archive.midnightchannel.net and showed signs of outside modification, and was also missing images as well as the original parameters.js and scrollingdiv.htc files. The chat HTML has been restored to the best of my ability by removing obvious modifications and restoring scrollingdiv.htc and the code that was likely stored in parameters.js. This is by no means an accurate representation of the original web page though since so much of the original page has been lost.
 - Help (help.msn.com)
 	- Some Help pages and related assets saved

@@ -1,0 +1,36 @@
+@import url(msntv:/Shared/CSS/Base.css);
+@import url(msntv:/CSS/Dialog.css);
+BODY{background-color:#90CEF4;color:#1D1D1D;border-width:0;padding:0;margin:0;overflow:hidden}
+.user,.roomdesc,.instr{}
+.chat,.hdr,.phdr,.main{font-size:21px}
+.chat,.hdr,.phdr,.roomname{font-weight:bold}
+.phdr{color:#CBE1FF;margin-top:17px;line-height:30px}
+.chat{color:#FFCEAC}
+.main{color:#F7F7F7}
+.pagenum,.room,.topics{color:#14224B}
+.help,.hd{font-size:16px}
+.help{color:#F2F2F2}
+.hd{color:#07214D}
+.rmhdr{background-color:#D1E6EE}
+.hrsep{border-bottom: #71ACD0 2px solid}
+.in{color:#E6E6E6;background-color:#304571}
+.png,.helpImg{behavior:url(#default#alphaImageLoader)}
+.png{height:25px}
+.helpImg{height:20px;width:20px;src:url(msntv:/Shared/Images/Icon_Help_RelatedLink.png)}
+.scroll{overflow-y:auto;behavior:url(/chat/controls/scrollingdiv.htc)}
+.hrgrad,.content,.conv,.stuff,.sidebar{behavior:url(#default#gradient);startColor:#FFFFFF;endcolor:#FFFFFF}
+.hrgrad{starttransparency:0%;endtransparency:100%;angle:90}
+.content{endcolor:#678CCD;starttransparency:65%;endtransparency:65%;angle:0}
+.conv,.stuff{startColor:#88C9F8;endcolor:#88C9F8;starttransparency:100%;endtransparency:0%;angle:0}
+.sidebar{starttransparency:75%;endtransparency:100%;angle:90}
+.panel,#AbusePanel{position:absolute;left:0;top:43px;left:0;width:560;height:340;z-index:10;visibility:hidden}
+.panel{background:url(/chat/apollo/panelslargebg.jpg) norepeat;background-color:#6CB0F6;padding:10px}
+#AbusePanel{background: url(msntv:/Panels/Images/ErrorDialogHeaderBG.jpg) no-repeat;background-color: #7DBAF7;margin:0;top:33px;height:350px}
+#icon{src:url(msntv:/Panels/images/Icon_Info_ErrorPanels.png)}
+#icon,#title{top:10px}
+#description{top:34px}
+#chatHdr{background-image:url(/chat/images/chatheader2.jpg);width:100%;height:56px}
+#chatTitle{float:left;width:100px;font-size:24px;color:white;padding:12px 0 0 15px}
+span.link{color:#1a2958}
+li.link{margin-top:15px}
+div.pannel{padding:0 15px 0 15px;position:absolute;top:56px;width:100%}

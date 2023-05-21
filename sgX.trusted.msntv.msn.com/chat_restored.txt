@@ -1,0 +1,2459 @@
+<html xmlns:msntv="http://www.microsoft.com/msntv">
+<?import namespace="msntv" implementation="chat/custombutton.htc"?>
+<script src="parameters.js" language="JavaScript"></script>
+	<head>
+		<title id=PageTitle>Chat:
+		</title>
+		<script>
+		    var title="Chat: "
+
+
+			if(parameters["server"])
+		    {
+			    title +=parameters["server"];
+				if(parameters["room"])
+				   title +="-"+parameters["room"];
+				document.all.PageTitle.text=title;
+ 			}
+
+		</script>
+
+		<link rel="stylesheet" href="chat/apollo.css?v=2" type="text/css">
+<style>
+#EmoticonPanel {
+	position:absolute;
+	left:395px;
+	top:35px;
+	height:200px;
+	width:156px;
+	z-index:12;
+	visibility:hidden;
+	}
+
+</style>
+
+		<script>
+mmNone = 0x0;
+mmMe = 0x1;
+mmAway = 0x2;
+
+mmOp = 0x10;
+mmVoice = 0x20;
+mmClientIgnored = 0x40;
+mmAutoIgnored = 0x80;
+var tvShell;
+var g_users;
+var g_currTarget = "";
+var g_whisId = "";
+var g_MeIsAway = 0;
+var g_Line = 0;
+var g_Friend = "";
+var g_FirstUser = 1;
+var g_SaveUserList = null;
+var g_OpenPanel = null;
+var g_RoomName = "";
+var g_Found = 0;
+var g_StartupInfo;
+var g_processunload=true;
+var statusIcons = new Array(2);
+statusIcons[0]= new Image();
+statusIcons[0].src = "/chat/images/chatheresmall.png";
+statusIcons[0].width = 20;
+statusIcons[0].height = 20;
+statusIcons[1] = new Image();
+statusIcons[1].src = "/chat/images/chatcoffee.png";
+statusIcons[1].width = 35;
+statusIcons[1].height = 25;
+var statusImages = new Array(5);
+statusImages["away"] = "/chat/images/chatcoffee.png";
+statusImages["Op"] = "/chat/images/chatoperator.png";
+statusImages["ignored"] = "/chat/images/chatblock.png";
+statusImages["here"] = "/chat/images/chatheresmall.png";
+
+
+var g_ErrorTxt=new Array();
+g_ErrorTxt[404] = "Error: Cannot send to channel.  You may need to reconnect.";
+g_ErrorTxt[412] = "No text to send.";
+g_ErrorTxt[433] = "Nickname is already in use";
+g_ErrorTxt[451] = "Connection not registered.";
+g_ErrorTxt[432] = "Erroneous Nickname: Illegal characters";
+g_ErrorTxt[702] = "Error: Channel not found.";
+g_ErrorTxt[709] = "Your friend \"" + g_Friend + "\" can't be found.";
+g_ErrorTxt[906] = "Bad value specified for integer property.";
+g_ErrorTxt[908] = "You do not have permission to chat.";
+g_ErrorTxt[913] = "We're sorry, you can't enter this chat room because you've been banned from it. Only the room's moderator can lift the ban.";
+g_ErrorTxt[932] = "Your previous message contained profanity and could not be sent.  Please rephrase without using the word(s) and try again.";
+
+var MAX_ROW_IN_LIST=100;
+var g_roomlist = new Array();  // example: #room1 #room2 ...
+var g_joinorcreate = 0;
+var g_createprivate = 0;
+var g_createtopic = "";
+var g_connected=false;
+var g_CSRoomCount=0;
+var g_CSUserCount=0;
+var g_registeringnick=true;
+var g_trialnick="";
+var g_trialnickindex=0;
+var g_partialnick=""
+var g_nickserv="nickserv"
+var g_nickservs=new Array();
+var g_currRoomListRange=0;
+
+g_nickservs["irc.chatnet.org"]="dogtag"
+
+var ContentSync	 = new ActiveXObject("MSNTV.ContentSync");
+var volume = ContentSync.UserDataPath;
+delete ContentSync;
+var userStorePath= TVShell.UserManager.CurrentUser.UserStorePath
+var g_email=TVShell.UserManager.CurrentUser.EMail;
+var g_emailNick=g_email.split("@")[0];
+var ChatSettingDir = "Chat";
+var ChatNickFile="nick.txt"
+var ChatEmoticonSettingFile="emsetting.txt"
+var ChatSettingPath= volume+"\\"+userStorePath+"\\"+ChatSettingDir;
+
+var g_enableEmoticon=RestoreEmoticonSetting();
+
+function RestoreNick()
+{
+	return TVShell.Utilities.ReadTextFile(ChatSettingPath+"\\"+ChatNickFile);
+}
+function SaveNick(data)
+{
+	TVShell.Utilities.EnsureFolderExist(ChatSettingPath);
+	TVShell.Utilities.CreateTextFile(ChatSettingPath+"\\"+ChatNickFile,data);
+}
+
+function RestoreEmoticonSetting()
+{
+	var emoticonsetting=TVShell.Utilities.ReadTextFile(ChatSettingPath+"\\"+ChatEmoticonSettingFile);
+	if(emoticonsetting && emoticonsetting=="true")
+	   return true;
+	else
+	   return false;
+}
+
+function SaveEmoticonSetting()
+{
+	TVShell.Utilities.EnsureFolderExist(ChatSettingPath);
+	TVShell.Utilities.CreateTextFile(ChatSettingPath+"\\"+ChatEmoticonSettingFile,g_enableEmoticon?"true":"false");
+}
+
+function GetMemberListIcon(userMode)
+{
+// don't change the order here because we rely on it to give the proper info
+   if((userMode & mmAutoIgnored) || (userMode & mmClientIgnored))
+       return statusImages["ignored"];
+   else if(userMode & mmAway)
+       return statusImages["away"];
+   else if((userMode & mmOp))
+       return statusImages["Op"];
+   else
+       return statusImages["here"];
+}
+
+function LoadUserList(userList)
+{
+	g_SaveUserList = userList;
+	var len = userList.length;
+	if (len == 0)
+		TotalCell.innerText = "1 person chatting";
+	else
+		TotalCell.innerText = (len+1) + " people chatting";
+	if (!g_OpenPanel)
+		LoadUserListMain();
+}
+
+function LoadUserListMain()
+{
+	var userList = g_SaveUserList;
+	g_SaveUserList = null;
+	if (userList == null)
+		return;
+	UserTable.innerHTML = "";
+	WhisperTable.innerHTML = "";
+	IgnoreTable.innerHTML = "";
+	g_whisId = "";
+	g_users = userList;
+	for(i = 0; i < len; i++) {
+
+		if (userList[i][1]) {
+			var mode = userList[i][0];
+			var icon = GetMemberListIcon(mode);
+			var userNick = userList[i][1];
+			var userId = "user" + i;
+			var rowcontent = "<table><tr><td style='vertical-align:top'><span id='" + userId + "' class='png' style='src:url(" + icon + ")'></span>&nbsp;</td><td align='left'><span class='user' style='width:320px;word-wrap:break-word;overflow-x:hidden'>" + userNick + "</span></td></tr></table>";
+			UserTable.insertAdjacentHTML('BeforeEnd', rowcontent);
+			var userMember = IRCCtrl.GetMemberByName(userNick, 1);
+			var igId = "ig" + i;
+			if (userMember.IsClientIgnored || userMember.IsAutoIgnored)
+				rowcontent = "<table><tr><td style='vertical-align:top'><input type='checkbox' id='" + igId + "' checked name='ignore' onClick=\"OnToggleIgnore(this, \'" + userNick + "\', " + i + ")\" />&nbsp;</td><td><span class='user' style='width:320px;word-wrap:break-word;overflow-x:hidden'>" + userNick + "</span></td></tr></table>";
+			else
+				rowcontent = "<table><tr><td style='vertical-align:top'><input type='checkbox' id='" + igId + "' name='ignore' onClick=\"OnToggleIgnore(this, \'" + userNick + "\', " + i + ")\" />&nbsp;</td><td><span class='user' style='width:320px;word-wrap:break-word;overflow-x:hidden'>" + userNick + "</span></td></tr></table>";
+			if (i != len - 1)
+				rowcontent = "<div style='margin-bottom:2px;border-bottom:#74A9E3 2px solid'>" + rowcontent + "</div>";
+			else
+				rowcontent += "<br/>";
+			IgnoreTable.insertAdjacentHTML('BeforeEnd', rowcontent);
+			var whisId = "whis" + i;
+			if (g_currTarget == userNick) {
+				g_whisId = whisId;
+				rowcontent = "<div id='" + whisId + "' style='width:250px;word-wrap:break-word;overflow-x:hidden;margin-top:2px;border-top:#74A9E3 2px solid'><table><tr><td style='vertical-align:top'><input type='radio' checked name='whisper' onClick=\"OnWhisperSelect('" + userNick + "', '" + whisId + "')\" />&nbsp;</td><td>" + userNick + "</td></tr></table></div>";
+			} else {
+				rowcontent = "<div id='" + whisId + "' style='width:250px;word-wrap:break-word;overflow-x:hidden;margin-top:2px;border-top:#74A9E3 2px solid'><table><tr><td style='vertical-align:top'><input type='radio' name='whisper' onClick=\"OnWhisperSelect('" + userNick + "', '" + whisId + "')\" />&nbsp;</td><td>" + userNick + "</td></tr></table></div>";
+			}
+			WhisperTable.insertAdjacentHTML('BeforeEnd', rowcontent);
+
+		}
+	}
+	if (g_FirstUser == 1) {
+		g_FirstUser = 0;
+		MyInfo.rows[0].cells[1].innerHTML = "<font weight=normal>Your nickname is</font> <span id=PeopleListMyNickSpan class='nickname'>" + Encode(IRCCtrl.CurrentNick,false) + ".</span>";
+		var roomInfo = IRCCtrl.GetRoomInfo();
+		var roomName = roomInfo.RoomName;
+		var displayname = roomName.substring(1);
+		SectionTitle.innerText = displayname;
+		drawNotice("Welcome to " + displayname, "#666666");
+		var welcome = roomInfo.Welcome;
+		if (welcome != "")
+			drawNotice(welcome, "#87290C");
+		var topic = roomInfo.Topic;
+		if (topic != "")
+			drawNotice("The topic is: " + Encode(topic,false), "#87290C");
+		if (g_Friend != "") {
+			g_Friend = "";
+		}
+	}
+}
+
+function ParseUserList(list)
+{
+
+	if (list != "") {
+		var tempList = list.split(',');
+		len = tempList.length;
+	} else {
+		len = 0;
+	}
+	var usrList = new Array(len);
+	for(i = 0; i < len; i++)
+		usrList[i] = tempList[i].split(' ');
+	return usrList;
+}
+
+
+
+function OnToggleIgnore(inputobj, displayname, usernum)
+{
+ var member = IRCCtrl.GetMemberByName(displayname, 1);
+ var ignored = inputobj.checked;
+ member.IsClientIgnored = ignored;
+ if (ignored)
+	member.AddModes(mmClientIgnored);
+ else {
+    member.RemoveModes(mmClientIgnored);
+    member.IsAutoIgnored = false;
+ }
+ var icon = GetMemberListIcon(member.Modes);
+ var iconimg = eval("user" + usernum);
+ iconimg.style.src = icon;
+ if(ignored)
+     drawNotice(member.DisplayNick + " is ignored", "#666666");
+ else
+     drawNotice(member.DisplayNick + " is unignored", "#666666");
+ window.event.returnValue = true;
+}
+g_lastline=0
+function draw(content)
+{
+    g_lastline=g_Line;
+	g_Line++
+	if(g_Line>500)
+	{
+	   ContentTable.rows[0].removeNode(true);
+	   g_Line --;
+	}
+	var rowObj=ContentTable.insertRow();
+    rowObj.id="ContentRow";
+	cellObj = rowObj.insertCell();
+	if(g_connected)
+	   cellObj.innerHTML="<div  class=out>" + content + "</div>"
+	else
+	   cellObj.innerHTML="<div style='color:red' class=out>Not connected to server.</div>"
+    if(g_lastline==499)
+    {
+        document.recalc(true);
+        RoomDiv.MyDoScroll("scrollToStart");
+    }
+	RoomDiv.MyDoScroll("scrollToEnd");
+}
+function ClearContent()
+{
+    g_Line=0;
+    g_lastline=0;
+   	var length=document.all.ContentTable.rows.length
+    var i=0;
+    for(i=length-1;i>=0;i--)
+	   ContentTable.deleteRow(i);
+
+	RoomDiv.MyDoScroll("scrollToStart");
+
+
+}
+
+
+function drawNotice(content, color)
+{
+    g_lastline=g_Line;
+	g_Line++
+
+	if(g_Line>500)
+	{
+	   ContentTable.rows[0].removeNode(true);
+	   g_Line --;
+	}
+
+	var rowObj=ContentTable.insertRow();
+    rowObj.id="ContentRow";
+	cellObj = rowObj.insertCell();
+
+	if(g_connected)
+	   cellObj.innerHTML="<div style='margin-left: 20px; color:" + color + "' class=out>" + content + "</div>"
+	else
+	   cellObj.innerHTML="<div style='margin-left: 20px; color:red' class=out>Not connected to server.</div>"
+
+    if(g_lastline==499)
+    {
+        document.recalc(true);
+        RoomDiv.MyDoScroll("scrollToStart");
+    }
+	RoomDiv.MyDoScroll("scrollToEnd");
+
+}
+
+function SortRoom(room1,room2)
+{
+  return room2[1]-room1[1];
+}
+
+function AddRoomItem(room,numPeople,topic)
+{
+    var index=g_roomlist.length
+	g_roomlist[index]=new Array();
+	g_roomlist[index][0]=room;
+	g_roomlist[index][1]=parseInt(numPeople);
+	g_roomlist[index][2]=topic;
+}
+
+function MakeRoomListHead()
+{
+    var roomListHeadHTML ="<table cellpadding=0 cellspacing=0 width=100%><tr>"
+	roomListHeadHTML +="<td align=right id=RangeDescriptionHead width=90% style='padding-right:10px'></td><td align=right width=5%><a id=PrevAnchorHead href='javascript:PreviousListRange(true)' disabled style='text-decoration:underline;'>Prev</a></td>"
+	roomListHeadHTML +="<td style='padding-left:5px;padding-right:5px'>|</td><td align=right width=2% style='padding-right:5px'><a id=NextAnchorHead disabled  href='javascript:NextListRange(true)' style='text-decoration:underline;'>Next</a></td>"
+	roomListHeadHTML +="</tr></table>"
+	roomListHeadHTML +="<table cellspacing=0  cellpadding=0 style='margin-top:10px;background-color:#D1E6EE;margin-left:5px'><tr><td align=left style='width:150px;'><b>Room</b></td><td align=left style='width:250px;'><b>Topic</b></td><td align=right style='padding-right:5px'><b>People</b></td></tr></table>";
+    roomListHeadHTML +="<div id=RoomListTableDiv style='margin-top:0px'></div>"
+	roomListHeadHTML +="<table cellpadding=0 cellspacing=0 width=100% style='margin-top:10px'><tr><td style='padding-right:10px' align=right width=90% id=RangeDescriptionFoot></td><td align=left><a id=PrevAnchorFoot  disabled  href='javascript:PreviousListRange(false)' style='text-decoration:underline;'>Prev</a></td>"
+	roomListHeadHTML +="<td style='padding-left:5px;padding-right:5px'>|</td><td align=right width=2% style='padding-right:5px'><a id=NextAnchorFoot disabled  href='javascript:NextListRange(false)' style='text-decoration:underline;'>Next</a></td>"
+	roomListHeadHTML +="</tr></table>"
+
+	var rowObj=ContentTable.insertRow();
+	cellObj=rowObj.insertCell();
+	cellObj.innerHTML=roomListHeadHTML;
+
+	if(g_roomlist.length>25)
+	{
+	   NextAnchorHead.disabled=false;
+	   NextAnchorFoot.disabled=false;
+	}
+	else
+	{
+	   NextAnchorHead.disabled=true;
+	   NextAnchorFoot.disabled=true;
+	}
+
+}
+
+
+function PreviousListRange(isHead)
+{
+   NextAnchorHead.disabled=false
+   NextAnchorFoot.disabled=false
+   if(g_currRoomListRange>0)
+   {
+      g_currRoomListRange--;
+
+	  if(g_currRoomListRange==0)
+	  {
+	    PrevAnchorHead.disabled=true;
+	    PrevAnchorFoot.disabled=true;
+	  }
+	  else
+	  {
+	   PrevAnchorHead.disabled=false
+	   PrevAnchorFoot.disabled=false
+	  }
+
+	  MakeRoomListTable(g_currRoomListRange*25);
+
+	  if(isHead)
+	  {
+		  if(PrevAnchorHead.disabled)
+		  {
+			 if(!NextAnchorHead.disabled)
+				NextAnchorHead.focus();
+		  }
+		  else
+			 PrevAnchorHead.focus();
+	  }
+	  else
+	  {
+		  if(PrevAnchorFoot.disabled)
+		  {
+			 if(!NextAnchorFoot.disabled)
+				NextAnchorFoot.focus();
+		  }
+		  else
+			 PrevAnchorFoot.focus();
+
+		  RoomDiv.MyDoScroll("scrollToEnd");
+	  }
+   }
+}
+function NextListRange(isHead)
+{
+   PrevAnchorHead.disabled=false
+   PrevAnchorFoot.disabled=false
+   if(g_currRoomListRange<3)
+   {
+      g_currRoomListRange++;
+	  if(g_currRoomListRange==3 || (g_currRoomListRange+1)*25>=g_roomlist.length)
+	  {
+	  	NextAnchorHead.disabled=true;
+	  	NextAnchorFoot.disabled=true;
+	  }
+	  else
+	  {
+		NextAnchorHead.disabled=false
+		NextAnchorFoot.disabled=false
+	  }
+
+	  MakeRoomListTable(g_currRoomListRange*25);
+
+	  if(isHead)
+	  {
+		  if(NextAnchorHead.disabled)
+		  {
+			 if(!PrevAnchorHead.disabled)
+				PrevAnchorHead.focus();
+		  }
+		  else
+			 NextAnchorHead.focus();
+	  }
+	  else
+	  {
+		  if(NextAnchorFoot.disabled)
+		  {
+			 if(!PrevAnchorFoot.disabled)
+				PrevAnchorFoot.focus();
+		  }
+		  else
+			 NextAnchorFoot.focus();
+
+		  RoomDiv.MyDoScroll("scrollToEnd");
+	  }
+   }
+
+}
+function MakeRoomListTable(start)
+{
+
+
+	if(g_roomlist)
+	{
+	    if(start==0)
+		   g_currRoomListRange=0
+		else if(start==25)
+		   g_currRoomListRange=1
+		else if(start==50)
+		   g_currRoomListRange=2
+		else if(start==75)
+		   g_currRoomListRange=3
+
+		var roomcount=g_roomlist.length;
+
+		if((start+24)<=(roomcount-1))
+		    end=start+24;
+		else
+		    end=roomcount-1;
+
+		if(OutMessageBoxRow.style.display=="none")
+		  SectionTitle.innerText=roomcount+" public "+((roomcount>1)?"rooms":"room")
+
+        document.all.RangeDescriptionHead.innerText="Room "+(start+1)+"-"+(end+1)+" of "+roomcount;
+        document.all.RangeDescriptionFoot.innerText="Room "+(start+1)+"-"+(end+1)+" of "+roomcount;
+
+		var roomlistHTML ="<table id=RoomListTable cellspacing=5  cellpadding=5 style='margin-left: 5px;margin-top:0px;padding-top:0px'>";
+		var htmlArray= new Array()
+		for(i=start;i<=end;i++)
+		{
+		    var roomdisplayname =Encode(g_roomlist[i][0].substring(1),false);
+			var roomHTML ="<tr width=100% valign=top><td style='width:120px;border-bottom:1px solid white;'><a href=#  onclick='JoinRoom("+ i +");return false;'><span class='ellipsis' style='width:120px;overflow-x:hidden'>"+roomdisplayname+"</span></a></td>";
+				roomHTML +="<td style='word-wrap:break-word;border-bottom:1px solid white'><div style='width:250px;word-wrap:break-word;overflow-x:hidden'>"+Encode(g_roomlist[i][2],false)+"</div></td>"
+				roomHTML +="<td align=right style='width:50px;border-bottom:1px solid white'>"+g_roomlist[i][1]+"</td></tr>"
+	       htmlArray.push(roomHTML);
+		}
+
+		roomlistHTML += htmlArray.join("");
+
+		roomlistHTML   +="</table>";
+
+		RoomListTableDiv.innerHTML = roomlistHTML;
+		RoomDiv.MyDoScroll("scrollToStart");
+
+		try{
+		  if(PrevAnchorHead.disabled && NextAnchorHead.disabled)
+		    document.all.RoomListTable.rows[0].all.tags("a")[0].focus();
+		}
+		catch(e)
+		{
+		}
+	}
+
+}
+
+
+
+function OnWhisperSelect(target, whId)
+{
+	g_currTarget = target;
+	g_whisId = whId;
+}
+
+function SendWhisper()
+{
+	if (g_currTarget != "") {
+		if (WhisperText.value == "") {
+			alert("Please type your private message.");
+		} else {
+			WhisperPanelDismiss();
+			if (IRCCtrl.IsMember(g_currTarget))
+			{
+				whisperMember = IRCCtrl.GetMemberByName(g_currTarget, 1);
+				draw("(whisper to " + g_currTarget + "): " + Encode(WhisperText.value,true));
+				IRCCtrl.Whisper(whisperMember, WhisperText.value, 0);
+			}
+			else
+				drawNotice("User " + g_currTarget + " is no longer in this room.", "#aa0000");
+			WhisperText.value = "";
+		}
+    } else {
+		alert("Please choose the nickname that you would like to whisper to.");
+    }
+}
+
+function ProcessKeyStroke(event)
+{
+	if(event.keyCode == 13) {
+		SendMessage();
+	} else {
+		return true;
+	}
+}
+
+
+function SendMessage()
+{
+	mynick = IRCCtrl.CurrentNick;
+	//mynick = mynick.substr(1);
+	var currentMsg = OutMessageBox.value;
+	if (currentMsg && (currentMsg != "")) {
+		if (currentMsg.indexOf("/me ") == 0) {
+			currentMsg = currentMsg.substring(4, currentMsg.Length);
+			IRCCtrl.Action(currentMsg);
+			draw("<i><font color='#1D1D1D'>" + mynick + "</font> " + Encode(currentMsg,true) + "</i>");
+		} else {
+			IRCCtrl.PrivMsg(currentMsg,"", 0);
+			draw("<font color='#1D1D1D'>" + mynick + "</font>: " + Encode(currentMsg,true));
+		}
+	} else {
+		tvShell.DeviceControl.PlaySound("Error");
+	}
+	OutMessageBox.value = "";
+	OutMessageBox.focus();
+	window.event.returnValue = false;
+}
+
+function ToggleMyAwayStatus()
+{
+     if(g_MeIsAway == 0)
+        g_MeIsAway = 1;
+     else
+        g_MeIsAway = 0;
+     statusIcon.style.src = statusIcons[g_MeIsAway].src
+     IRCCtrl.Away(g_MeIsAway, "I am away at the moment.");
+	 // do not draw here since we'll have event from server to notify us our status
+    /* if(g_MeIsAway)
+        drawNotice("You have been marked as being away.", "#666666");
+     else
+        drawNotice("You are no longer marked as being away.", "#666666");*/
+}
+
+var panelStart = 593;
+var panelIncrement = 50;
+var panelEnd = 43;
+
+var peoplePanelCurrent;
+var peoplePanelTimerId;
+
+var whisperPanelCurrent;
+var whisperPanelTimerId;
+
+var ignorePanelCurrent;
+var ignorePanelTimerId;
+
+var joinPanelCurrent;
+var joinPanelTimerId;
+var joinEnd=200;
+
+var CreatePanelCurrent
+var createPanelTimerId;
+var createEnd=110;
+
+var NickPanel2Current
+var nickPanel2TimerId
+var nickPanel2End=104;
+
+var InfoPanelEnd=172;
+
+
+function WhisperPanelScroll()
+{
+	whisperPanelCurrent = whisperPanelCurrent - panelIncrement;
+	if (whisperPanelCurrent >= panelEnd) {
+		document.all.WhisperPanel.style.pixelTop = whisperPanelCurrent;
+	} else {
+		clearInterval(whisperPanelTimerId);
+		WhisperText.focus();
+		DisableMain();
+		if (g_whisId != "")
+			eval(g_whisId).scrollIntoView(true);
+	}
+}
+
+function WhisperPanel()
+{
+
+
+	if(g_enableEmoticon)
+	{
+	  EmotBtnDivWhisper.style.src="/chat/images/ChatEmotEnabled.png"
+	}
+	else
+	{
+	  EmotBtnDivWhisper.style.src="/chat/images/ChatEmotDisabled.png"
+	}
+
+	emoticonButtonWhisper.disabled=!g_enableEmoticon;
+
+	WhisperText.value = "";
+	whisperPanelCurrent = panelStart;
+	var wps = document.all.WhisperPanel.style;
+	wps.pixelTop = panelStart;
+	wps.visibility = 'visible';
+	g_OpenPanel = document.all.WhisperPanel;
+	whisperPanelTimerId = setInterval("WhisperPanelScroll()", 10);
+	WhisperTable.MyDoScroll("scrollToEnd");
+	WhisperTable.MyDoScroll("scrollToStart");
+	window.event.returnValue = false;
+}
+
+function WhisperPanelDismiss()
+{
+	EnableMain();
+	EmoticonPanel.style.visibility = "hidden";
+	document.all.WhisperPanel.style.visibility = 'hidden';
+	g_OpenPanel = null;
+	if (g_SaveUserList != null)
+		LoadUserListMain();
+	window.event.returnValue = false;
+}
+function InfoPanelDismiss()
+{
+	EnableMain();
+	document.all.InfoPanel.style.visibility = 'hidden';
+	InfoDiv.innerText =""
+	g_OpenPanel = null;
+	window.event.returnValue = false;
+}
+
+function ShowInfoPanel(info)
+{
+    DisableMain();
+    if(g_OpenPanel==null || g_OpenPanel.id!="InfoPanel")
+	{
+	   TVShell.DeviceControl.PlaySound("Chat_Whisper");
+	   if(g_OpenPanel)
+	     g_OpenPanel.all.DismissButton.click();
+	   g_OpenPanel=document.all.InfoPanel;
+	   document.all.InfoPanel.style.pixelTop = InfoPanelEnd;
+	   document.all.InfoPanel.style.visibility = 'visible';
+
+       InfoDiv.innerText =info
+	}
+	else
+       InfoDiv.innerText +=info
+
+	document.all.InfoPanel.all.DismissButton.focus();
+
+}
+function PeoplePanelScroll()
+{
+	peoplePanelCurrent = peoplePanelCurrent - panelIncrement;
+	if (peoplePanelCurrent >= panelEnd) {
+	   document.all.PeoplePanel.style.pixelTop = peoplePanelCurrent;
+
+	} else {
+		clearInterval(peoplePanelTimerId);
+		document.all.PeoplePanel.all.DismissButton.focus();
+		DisableMain();
+	}
+}
+
+function PeoplePanel()
+{
+	peoplePanelCurrent = panelStart;
+	var ups = document.all.PeoplePanel.style;
+	ups.pixelTop = panelStart;
+	ups.visibility = 'visible';
+	g_OpenPanel = document.all.PeoplePanel;
+	peoplePanelTimerId = setInterval("PeoplePanelScroll()", 10);
+	UserTable.MyDoScroll("scrollToEnd");
+	UserTable.MyDoScroll("scrollToStart");
+	window.event.returnValue = false;
+}
+
+function PeoplePanelDismiss()
+{
+	EnableMain();
+	document.all.PeoplePanel.style.visibility = 'hidden';
+	g_OpenPanel = null;
+	if (g_SaveUserList != null)
+		LoadUserListMain();
+	window.event.returnValue = false;
+}
+
+function IgnorePanelScroll()
+{
+	ignorePanelCurrent = ignorePanelCurrent - panelIncrement;
+	if (ignorePanelCurrent >= panelEnd) {
+		document.all.IgnorePanel.style.pixelTop = ignorePanelCurrent;
+	} else {
+		clearInterval(ignorePanelTimerId);
+		document.all.IgnorePanel.all.DismissButton.focus();
+		DisableMain();
+	}
+}
+
+function IgnorePanel()
+{
+	ignorePanelCurrent = panelStart;
+	var ips = document.all.IgnorePanel.style;
+	ips.pixelTop = panelStart;
+	ips.visibility = 'visible';
+	g_OpenPanel = document.all.IgnorePanel;
+	ignorePanelTimerId = setInterval("IgnorePanelScroll()", 10);
+	window.event.returnValue = false;
+}
+
+function IgnorePanelDismiss()
+{
+	EnableMain();
+	document.all.IgnorePanel.style.visibility = 'hidden';
+	g_OpenPanel = null;
+	if (g_SaveUserList != null)
+		LoadUserListMain();
+	window.event.returnValue = false;
+}
+
+function JoinPanel()
+{
+	joinPanelCurrent = panelStart;
+	var ips = document.all.JoinPanel.style;
+	ips.pixelTop = panelStart;
+	JoinRoomInput.value="";
+	ips.visibility = 'visible';
+	g_OpenPanel = document.all.JoinPanel;
+	joinPanelTimerId = setInterval("JoinPanelScroll()", 10);
+	window.event.returnValue = false;
+}
+
+function JoinPanelScroll()
+{
+	joinPanelCurrent = joinPanelCurrent - panelIncrement;
+	if (joinPanelCurrent >= joinEnd) {
+		document.all.JoinPanel.style.pixelTop = joinPanelCurrent;
+	} else {
+		clearInterval(joinPanelTimerId);
+		JoinRoomInput.focus();
+		DisableMain();
+	}
+}
+
+function JoinDismiss()
+{
+	EnableMain();
+	g_OpenPanel = null;
+	document.all.JoinPanel.style.visibility = "hidden";
+	window.event.returnValue = false;
+
+}
+
+function JoinContinue()
+{
+
+	JoinDismiss()
+	if(JoinRoomInput.value)
+		JoinRoomByName(JoinRoomInput.value);
+}
+
+function CreatePanel()
+{
+	CreatePanelCurrent = panelStart;
+	CreateRoomInput.value="";
+	CreateTopic.value="";
+	CreateUnlisted.checked=false;
+	var ips = document.all.CreatePanel.style;
+	ips.pixelTop = panelStart;
+	ips.visibility = 'visible';
+	g_OpenPanel = document.all.CreatePanel;
+	createPanelTimerId = setInterval("CreatePanelScroll()", 10);
+	window.event.returnValue = false;
+}
+
+function CreatePanelScroll()
+{
+	CreatePanelCurrent = CreatePanelCurrent - 30;
+	if (CreatePanelCurrent >= createEnd) {
+		document.all.CreatePanel.style.pixelTop = CreatePanelCurrent;
+	} else {
+		clearInterval(createPanelTimerId);
+		CreateRoomInput.focus();
+		DisableMain();
+	}
+}
+
+function DismissCreatePanel()
+{
+	document.all.CreatePanel.style.visibility = "hidden";
+	g_OpenPanel = null;
+
+	if(EnableMain())
+	  newButton.focus();
+}
+
+function CreateContinue()
+{
+
+	DismissCreatePanel();
+	document.all.CreatePanel.style.visibility = "hidden";
+	if(CreateRoomInput.value)
+		CreateRoom(CreateRoomInput.value,CreateTopic.value, CreateUnlisted.checked);
+}
+
+function CreateRoom(newroom,topic,private)
+{
+    if(g_connected)
+	{
+		g_joinorcreate=1;
+		g_createprivate=private;
+		g_createtopic=topic;
+		g_RoomName = "#"+newroom;
+		IRCCtrl.JoinRoom(g_RoomName, "");
+	}
+}
+
+
+
+function RegisterContinue2()
+{
+   if(RegMsgInput.value && RegMsgInput.value.toLowerCase().indexOf("/msg ")==0)
+   {
+	 NickDismiss2();
+	 IRCCtrl.PrivMsg(RegMsgInput.value,"", 0);
+   }
+   else
+     alert("Please enter valid message for nickname service.");
+}
+
+
+function NickPanel2()
+{
+    CurrNickSpan2.innerText=IRCCtrl.CurrentNick
+	NickPanel2Current = panelStart;
+	var ips = document.all.NickPanel2.style;
+	ips.pixelTop = panelStart;
+	ips.visibility = 'visible';
+	g_OpenPanel = document.all.NickPanel2;
+	nickPanel2TimerId = setInterval("NickPanelScroll2()", 10);
+	window.event.returnValue = false;
+}
+
+
+function NickDismiss2()
+{
+	EnableMain();
+	g_OpenPanel = null;
+	document.all.NickPanel2.style.visibility = "hidden";
+	window.event.returnValue = false;
+
+}
+function NickPanelScroll2()
+{
+	NickPanel2Current = NickPanel2Current - 20;
+	if (NickPanel2Current >= nickPanel2End) {
+		document.all.NickPanel2.style.pixelTop = NickPanel2Current;
+	} else {
+		document.all.NickPanel2.style.pixelTop = nickPanel2End;
+		clearInterval(nickPanel2TimerId);
+		if(NewNickRow2.style.display!="none")
+		   NicknameInput2.focus();
+		else if(RegMsgRow.style.display!="none")
+		   RegMsgInput.focus();
+
+		DisableMain();
+	}
+}
+
+function ChangeContinue2()
+{
+
+	if(NicknameInput2.value && NicknameInput2.value!=IRCCtrl.CurrentNick)
+	{
+	    NickDismiss2()
+		IRCCtrl.SendNick(NicknameInput2.value);
+	}
+	else
+	    tvShell.DeviceControl.PlaySound("Error");
+
+}
+
+
+function DisableMain()
+{
+	RoomPanel.disabled = true;
+	HelpTable.disabled = true;
+}
+
+function EnableMain()
+{
+    HelpTable.disabled = false;
+	if(!g_connected)
+		return false;
+	RoomPanel.disabled = false;
+	if(OutMessageBoxRow.style.display=="block" && OutMessageBox.disabled==false)
+	  OutMessageBox.focus();
+	return true;
+}
+
+
+
+function ShowEmoticonPanel()
+{
+	EmoticonPanel.style.visibility = "visible";
+	anchorEmoticon53.focus();
+}
+
+function MoveEmoticonFocus(row,column,s)
+{
+	var e=window.event;
+	if(e.altKey || e.ctrlKey)
+		return;
+	var OutTextInput=OutMessageBox;
+	if(document.all.WhisperPanel.style.visibility=="visible")
+
+	    OutTextInput=WhisperText;
+
+	switch(e.keyCode){
+		case 37://go left
+			if (column > 0) {
+				eval('anchorEmoticon'+row+(column-1)+'.focus()');
+			} else {
+				EmoticonPanel.style.visibility = "hidden";
+				if (OutTextInput.disabled == false)
+					OutTextInput.focus();
+			}
+			window.event.returnValue = false;
+			break;
+		case 38://go up
+			if (row > 0) {
+				eval('anchorEmoticon'+(row-1)+column+'.focus()');
+			} else {
+				EmoticonPanel.style.visibility = "hidden";
+				if (OutTextInput.disabled == false)
+					OutTextInput.focus();
+			}
+			window.event.returnValue = false;
+			break;
+		case 39://go right
+			if (column < 3) {
+				eval('anchorEmoticon'+row+(column+1)+'.focus()');
+			} else {
+				EmoticonPanel.style.visibility = "hidden";
+				if (OutTextInput.disabled == false)
+					OutTextInput.focus();
+			}
+			window.event.returnValue = false;
+			break;
+		case 40://go down
+			if (row < 5) {
+				eval('anchorEmoticon'+(row+1)+column+'.focus()');
+			} else {
+				EmoticonPanel.style.visibility = "hidden";
+				if (OutTextInput.disabled == false)
+					OutTextInput.focus();
+			}
+			window.event.returnValue = false;
+			break;
+		case 9:// table
+			if (column < 3) {
+				eval('anchorEmoticon'+row+(column+1)+'.focus()');
+			} else if (row <5) {
+				eval('anchorEmoticon'+(row+1)+'0'+'.focus()');
+			} else {
+				EmoticonPanel.style.visibility = "hidden";
+				if (OutTextInput.disabled == false)
+					OutTextInput.focus();
+			}
+			window.event.returnValue = false;
+			break;
+		case 13://enter
+			window.event.returnValue = false;
+			EmoticonPanel.style.visibility = "hidden";
+			OutTextInput.value=OutTextInput.value+s;
+			OutTextInput.focus();
+			break;
+		default:
+			return;
+	}
+}
+
+function ToggleEnableEmotion()
+{
+	g_enableEmoticon= !g_enableEmoticon;
+    emoticonButtonMain.disabled=!g_enableEmoticon;
+	if(g_enableEmoticon)
+	  EmotBtnDivMain.style.src="/chat/images/ChatEmotEnabled.png"
+	else
+	  EmotBtnDivMain.style.src="/chat/images/ChatEmotDisabled.png"
+}
+
+
+function AddEmoticon(s)
+{
+	var i;
+	var htmlStr = "";
+	var a,b,c;
+	var linkStr = '';
+	var step;
+	var len = s.length;
+	for (i = 0; i < len;) {
+		a = s.charAt(i);
+		if (i+1 < len)
+			b = s.charAt(i+1);
+		else
+			b ='';
+		if (i+2 < len)
+			c = s.charAt(i+2);
+		else
+			c ='';
+		if (a == '(' && c == ')') {
+			step=3;
+			switch(b) {
+				case 'Y':
+				case 'y':
+					 linkStr='emthup';
+					 break;
+				case 'N':
+				case 'n':
+					 linkStr='emthdown';
+					 break;
+				case 'B':
+				case 'b':
+					 linkStr='embeer';
+					 break;
+				case 'D':
+				case 'd':
+					 linkStr='emcocktl';
+					 break;
+				case 'X':
+				case 'x':
+					 linkStr='emgirl';
+					 break;
+				case 'Z':
+				case 'z':
+					 linkStr='emboy';
+					 break;
+				case '6':
+					 linkStr='emdevil';
+					 break;
+				case '}':
+					 linkStr='emhugr';
+					 break;
+				case '{':
+					 linkStr='emhugl';
+					 break;
+				case 'H':
+				case 'h':
+					 linkStr='emshades';
+					 break;
+				case 'A':
+				case 'a':
+					 linkStr='emangel';
+					 break;
+				case 'L':
+				case 'l':
+					 linkStr='emlove';
+					 break;
+				case 'U':
+				case 'u':
+					 linkStr='emunlove';
+					 break;
+				case 'K':
+				case 'k':
+					 linkStr='emlips';
+					 break;
+				case 'G':
+				case 'g':
+					 linkStr='emgift';
+					 break;
+				case 'F':
+				case 'f':
+					 linkStr='emrose';
+					 break;
+				case 'W':
+				case 'w':
+					 linkStr='emwilt';
+					 break;
+				case 'P':
+				case 'p':
+					 linkStr='emphoto';
+					 break;
+				case 'R':
+				case 'r':
+					 linkStr='emrainbow';
+					 break;
+				case '~':
+					 linkStr='emfilm';
+					 break;
+				case 'T':
+				case 't':
+					 linkStr='emphone';
+					 break;
+				case '@':
+					 linkStr='emcat';
+					 break;
+//				case '&':
+//					 linkStr='emdog';
+//					 break;
+				case 'C':
+				case 'c':
+					 linkStr='emcup';
+					 break;
+				case 'I':
+				case 'i':
+					 linkStr='embulb';
+					 break;
+				case 'S':
+					 linkStr='emsleep';
+					 break;
+				case '*':
+					 linkStr='emstar';
+					 break;
+				case '8':
+					 linkStr='emnote';
+					 break;
+				case 'E':
+				case 'e':
+					 linkStr='ememail';
+					 break;
+				case '^':
+					 linkStr='emcake';
+					 break;
+				case 'O':
+				case 'o':
+					 linkStr='emclock';
+					 break;
+				case 'M':
+				case 'm':
+					 linkStr='emmessag';
+					 break;
+				case '#':
+					 linkStr='emhottie';
+					 break;
+				default:
+					 linkStr = '';
+					 break;
+			}
+		}else if (a == ':') {
+			step = 2;
+			switch(b){
+				case '[':
+					linkStr = 'emvamp';
+					break;
+				case ')':
+					linkStr = 'emsmile';
+					break;
+				case 'd':
+				case 'D':
+					linkStr = 'emsmiled';
+					break;
+				case 'o':
+				case 'O':
+					linkStr = 'emsmileo';
+					break;
+				case 'p':
+				case 'P':
+					linkStr = 'emsmilep';
+					break;
+				case '(':
+					linkStr = 'emsad';
+					break;
+				case 's':
+				case 'S':
+					linkStr = 'emconfused';
+					break;
+				case '|':
+					linkStr = 'emdgust';
+					break;
+				case '$':
+					linkStr = 'emblush';
+					break;
+				case '@':
+					linkStr = 'emangry';
+					break;
+				case '-':
+					step = 3;
+					switch(c) {
+						case '[':
+							linkStr = 'emvamp';
+							break;
+						case ')':
+							linkStr = 'emsmile';
+							break;
+						case 'D':
+						case 'd':
+							linkStr = 'emsmiled';
+							break;
+						case 'O':
+						case 'o':
+							linkStr = 'emsmileo';
+							break;
+						case 'P':
+						case 'p':
+							linkStr = 'emsmilep';
+							break;
+						case '(':
+							linkStr = 'emsad';
+							break;
+						case 'S':
+						case 's':
+							linkStr = 'emconfused';
+							break;
+						case '|':
+							linkStr = 'emdgust';
+							break;
+						case '$':
+							linkStr = 'emblush';
+							break;
+						case '@':
+							linkStr = 'emangry';
+							break;
+						default:
+							linkStr = '';
+							break;
+					};
+					break;
+				case '\'':
+					if(c == '(') {
+						linkStr = 'emcry';
+						step = 3;
+					}else
+						linkStr = '';
+					break;
+				default:
+					linkStr = '';
+					break;
+			}
+		}else if (a == ';' && !( i >= 5 && s.charAt(i-5) == '&' && s.charAt(i-4) == 'q' && s.charAt(i-3) == 'u' && s.charAt(i-2)=='o' && s.charAt(i-1)=='t')){
+			if (b == ')') {
+				linkStr = 'emwink';
+				step = 2;
+			}else if (b == '-' && c == ')') {
+				linkStr = 'emwink';
+				step = 3;
+			}
+		}else if (i+6 < len && s.charAt(i) == '('
+				&& s.charAt(i+1) == '&'&& s.charAt(i+2) == 'a'&& s.charAt(i+3) == 'm'
+				&& s.charAt(i+4) == 'p'&& s.charAt(i+5) == ';'&& s.charAt(i+6) == ')') {
+			linkStr = 'emdog';
+			step = 7;
+		}else
+			linkStr = '';
+
+		if(linkStr !='') {
+			htmlStr += '<span style=\"padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/'+ linkStr + '.png;\"></span>';
+			i += step;
+		} else {
+			htmlStr += a;
+			i ++;
+		}
+	}
+    return htmlStr;
+}
+
+function AddLinks(s)
+{
+    var str;
+    var i;
+    var nlindex;
+    var splitArray = s.split(' ');
+    var temp;
+	var len = splitArray.length;
+    str = '';
+    for (i = 0; i < len; i++)
+    {
+		var ent = splitArray[i];
+		var chk = ent.toLowerCase();
+        if(chk.indexOf('http://') == 0
+         || chk.indexOf('https://') == 0
+         || chk.indexOf('ftp://') == 0) {
+			ent = '<a href="' + ent + '" style="color:#14224B;text-decoration:underline">' + ent + '</a>';
+		} else if (chk.indexOf('www.') == 0) {
+			ent = '<a href="http://' + ent + '" style="color:#14224B;text-decoration:underline">' + ent + '</a>';
+        }
+        str += ent + ' ';
+    }
+    return str;
+}
+var re = /(\3[0-9]{2}[a-z]\3[0-9]{2})|([\3\2]+[0-9]*,?[0-9]*)/g; // the first pattern is specifically for triviacafe on chatnet.org
+
+
+function Encode(s, addEmot)
+{
+	s = s.replace(re, " ");
+	s = s.substr(0,512); // max message length as long message will mess up the UI
+	s = tvShell.Utilities.EscapeHTML(s);
+
+	if(g_enableEmoticon && addEmot)
+	  s = AddEmoticon(s);
+	return AddLinks(s);
+}
+
+function ConvertColor(col)
+{
+	var c = col.toString(16);
+	switch (c.length)
+	{
+	case 0:
+		return "000000";
+	case 1:
+		return "00000" + c;
+	case 2:
+		return "0000" + c;
+	case 3:
+		return "000" + c;
+	case 4:
+		return "00" + c;
+	case 5:
+		return "0" + c;
+	case 6:
+		return c;
+	default:
+		return c;
+	}
+}
+
+function Restart()
+{
+	StopChat();
+	Connect();
+}
+
+function BeforeUnload()
+{
+  if(!g_processunload)
+    return;
+  g_processunload=true;
+  if(g_connected==true && (RoomPanel.disabled==false||g_OpenPanel&&g_OpenPanel.id!="InfoPanel") && OutMessageBoxRow.style.display=="block")
+    event.returnValue = "You will leave the chat room if you choose OK.";
+}
+
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+
+function PageLoad()
+{
+
+	Sink.AttachEvent(TVShell.ConnectionManager, "OnWANStateChange", OnWANStateChange);
+
+    g_connected=false;
+	EmButtonCheckbox.checked=g_enableEmoticon;
+	if(g_enableEmoticon)
+	  EmotBtnDivMain.style.src="/chat/images/ChatEmotEnabled.png"
+	else
+	  EmotBtnDivMain.style.src="/chat/images/ChatEmotDisabled.png"
+	emoticonButtonMain.disabled=!g_enableEmoticon;
+
+	IRCCtrl.RoomLimit=MAX_ROW_IN_LIST;
+	tvShell = new ActiveXObject("MSNTV.TVShell");
+	g_StartupInfo=IRCCtrl.GetStartupInfo();
+	if(parameters["server"])
+	{
+	  g_StartupInfo.Server=parameters["server"];
+      if(g_nickservs[parameters["server"].toLowerCase()])
+	    g_nickserv=g_nickservs[parameters["server"].toLowerCase()]
+	}
+	else
+	{
+	   alert("Chat server is not specified!");
+	   window.history.back();
+	}
+
+	HeaderTitle.innerText=g_StartupInfo.Server;
+	var port=parseInt(parameters["port"]);
+	if(port>=1024)
+	  g_StartupInfo.Port=port;
+	else
+	  g_StartupInfo.Port=6667;
+
+	if(parameters["room"])
+	{
+	  g_RoomName="#"+parameters["room"];
+	  ShowRoomContent(true);
+	  ShowRoomButtons(true);
+	  EnableRoomButtons(false);
+	}
+	else
+	{
+	  ShowRoomListButtons(true);
+	  EnableRoomListButtons(false);
+	}
+
+	Connect();
+}
+
+
+
+function Reconnect()
+{
+	g_processunload = false;
+	if(OutMessageBoxRow.style.display!="none")
+	{
+	   var url=location.href.substr(0,location.href.indexOf("chat.html?")+10);
+	   url +="server="+parameters["server"];
+	   if(parameters["port"])
+			url += "&port="+parameters["port"];
+	   location.replace(url+"&room="+g_RoomName.substr(1));
+	}
+	else
+		location.reload();
+}
+
+function OnWANStateChange(ConnectCause, newState, newProgress)
+{
+	switch (newState) {
+		case 2: //ConnectState_Connected:
+			if(TVShell.ConnectionManager.WANAdapter.Type == 1) // dial-up
+			  setTimeout("Reconnect()",5000);
+			else
+			  Reconnect();
+			break;
+		default:
+		    break;
+	}
+}
+function CancelConnecting()
+{
+  g_processunload=false;
+  window.history.back()
+}
+
+function Connect()
+{
+	SetProgressPercent(5);
+	SetProgressStopFunction(CancelConnecting);
+	SetProgressText("Contacting chat service...");
+    ShowProgressPanel();
+
+	// initialize as IRC client
+	IRCCtrl.Init();
+    IRCCtrl.StartConnection();
+
+}
+function RegisterConnection()
+{
+
+    g_trialnick=RestoreNick();
+	if(!g_trialnick)
+		g_trialnick=g_emailNick;
+	g_partialnick=g_trialnick;
+	IRCCtrl.SendNick(g_trialnick);
+	IRCCtrl.SendUser(g_trialnick,GetHostIP(),g_StartupInfo.Server,g_email);
+	g_registeringnick=true;
+
+}
+
+function JoinRoom(index)
+{
+    g_joinorcreate=0;
+	g_createprivate=false
+	g_currRoomIndex=index;
+	g_RoomName = g_roomlist[index][0];
+	IRCCtrl.JoinRoom(g_roomlist[index][0], "");
+}
+
+function JoinRoomByName(roomname)
+{
+    g_joinorcreate=0;
+	g_createprivate=false;
+	g_RoomName = "#"+roomname;
+	IRCCtrl.JoinRoom(g_RoomName, "");
+}
+
+function ListRooms()
+{
+    g_roomlist = new Array();
+	EnableRoomListButtons(false);
+
+	SectionTitle.innerText="Loading room list...";
+	ClearContent()
+
+	RoomDiv.MyDoScroll("scrollToStart");
+	IRCCtrl.SendList();
+}
+
+function Done()
+{
+	if(OutMessageBoxRow.style.display=="none")
+	    window.history.back()
+	else
+	    BackFromRoom()
+}
+function BackFromRoom()
+{
+   if(parameters["room"])
+         window.history.back();
+   else if(!ConfirmLeave())
+         return false;
+   else
+   {
+     IRCCtrl.SendPart(g_RoomName);
+   	 ShowRoomContent(false);
+	 ShowRoomListContent(true);
+	 EnableRoomListButtons(false);
+	 SectionTitle.innerText="Loading room list..."
+	 ListRooms();
+   }
+}
+
+
+function ConfirmLeave()
+{
+	var disResp = tvShell.PanelManager.CustomMessageBox("Do you want to leave current chat room? <p></p>Choose <b>OK</b> to leave the room, or <b>Cancel</b> to remain in the room.", "", "OK;Cancel",1, "");
+	if(disResp==0)
+	  return true;
+	else
+	  return false;
+
+}
+function GetHostIP()
+{
+    return TVShell.ConnectionManager.WANAdapter.IPAddress;
+}
+
+function GetRealName()
+{
+  return TVShell.UserManager.CurrentUser.EMail;
+}
+
+function StopChat()
+{
+	IRCCtrl.Disconnect();
+	IRCCtrl.Deinit();
+}
+
+function ShowRoomListButtons(show)
+{
+	if(show)
+	{
+	//	listButton.style.display="block";
+		enterButton.style.display="block";
+		newButton.style.display="block";
+	//	nickButton2.style.display="block";
+	}
+	else
+	{
+		enterButton.style.display="none";
+		newButton.style.display="none";
+	//	nickButton2.style.display="none";
+	//	listButton.style.display="none";
+	}
+
+}
+
+function EnableRoomListButtons(enable)
+{
+	if(enable)
+	{
+	//    listButton.disabled=false;
+		enterButton.disabled=false;
+		newButton.disabled=false;
+	//	nickButton2.disabled=false;
+	}
+	else
+	{
+	//	listButton.disabled=true;
+		enterButton.disabled=true;
+		newButton.disabled=true;
+	//	nickButton2.disabled=true;
+	}
+}
+
+function ShowRoomListContent(show)
+{
+
+  ShowRoomListButtons(show);
+
+  if(show)
+  {
+    ClearContent()
+	RoomDiv.style.height="290px";
+	RoomDiv.MyDoScroll("scrollToStart");
+	TotalCell.innerText="";
+	TipDiv.innerHTML=""
+  }
+
+
+}
+function ShowRoomButtons(show)
+{
+	if(show)
+	{
+		peopleButton.style.display="block";
+		ignoreButton.style.display="block";
+		whisperButton.style.display="block";
+		clearButton.style.display="block";
+		OutMessageBoxRow.style.display="block"
+		EmButtonTable.style.display="block"
+	}
+	else
+	{
+	//	listButton.style.display="none";
+		peopleButton.style.display="none";
+		ignoreButton.style.display="none";
+		whisperButton.style.display="none";
+		clearButton.style.display="none";
+		EmButtonTable.style.display="none";
+
+	}
+}
+
+function EnableRoomButtons(enable)
+{
+	if(enable)
+	{
+		peopleButton.disabled=false;
+		ignoreButton.disabled=false;
+		whisperButton.disabled=false;
+		clearButton.disabled=false;
+		OutMessageBoxRow.disabled=false;
+		sendButton.disabled=false;
+		OutMessageBox.disabled=false;
+		EmButtonTable.disabled=false;
+	}
+	else
+	{
+	//	listButton.disabled=true;
+		peopleButton.disabled=true;
+		ignoreButton.disabled=true;
+		whisperButton.disabled=true;
+		clearButton.disabled=true;
+		sendButton.disabled=true;
+		OutMessageBox.disabled=true;
+		EmButtonTable.disabled=true;
+
+	}
+
+
+}
+
+
+function ShowRoomContent(show)
+{
+  ShowRoomButtons(show);
+  if(show)
+  {
+    if(!parameters["room"])
+	   ClearContent()
+	RoomDiv.style.height="245px";
+	RoomDiv.MyDoScroll("scrollToStart");
+	var textRange = OutMessageBox.createTextRange();
+	textRange.collapse(false);
+	textRange.select();
+	TipDiv.innerHTML="Tip: To see a list of people in the room, choose <b>People List</b>."
+
+  }
+  else
+  {
+  	OutMessageBoxRow.style.display="none"
+  	SectionTitle.innerText="";
+  }
+
+}
+
+function MSNTVHandleBackKey()
+{
+	var handled=false;
+	if (!TVShell.IsOn || !TVShell.UserManager.CurrentUser.IsAuthorized)
+		return handled;
+
+	if(g_OpenPanel)
+	{
+		g_OpenPanel.all.DismissButton.click();
+		handled=true;
+	}
+	else if(g_connected && OutMessageBoxRow.style.display=="block")
+	{
+		if(!parameters["room"])
+		{
+		   if(ConfirmLeave())
+		   {
+		      IRCCtrl.SendPart(g_RoomName);
+   			 ShowRoomContent(false);
+			 ShowRoomListContent(true);
+			 EnableRoomListButtons(false);
+			 SectionTitle.innerText="Loading room list..."
+		      ListRooms();
+		   }
+		   handled =true;
+        }
+	}
+
+	return handled;
+}
+
+function OnUnload()
+{
+   if(g_connected && OutMessageBoxRow.style.display!="none" && OutMessageBox.disabled==false)
+ 	     IRCCtrl.SendPart(g_RoomName);
+
+   SaveEmoticonSetting();
+   StopChat()
+}
+
+
+function ShowChangeNick2()
+{
+   ChangeNickCell2.style.backgroundColor="#CBE1FF"
+   RegisterNickCell2.style.backgroundColor=""
+
+   RegisterContinueButton2.style.display="none";
+   RegMsgRow.style.display="none";
+   NewNickRow2.style.display="block";
+   ChangeContinueButton2.style.display="block";
+   NickTipCell2.innerText="(A nickname is at most 25 characters long without space. And it may not start with any of the following characters: .@+%)"
+
+   NicknameInput2.focus();
+}
+
+
+function ShowRegisterNick2()
+{
+   RegMsgRow.style.display="block";
+   RegisterContinueButton2.style.display="block";
+
+   ChangeNickCell2.style.backgroundColor=""
+   RegisterNickCell2.style.backgroundColor="#CBE1FF"
+
+   ChangeContinueButton2.style.display="none";
+   NewNickRow2.style.display="none";
+   RegMsgInput.focus()
+   NickTipCell2.innerHTML="( Type a message for nickname service and then select <b>Send</b>. Usually a message for nickname service looks like \"/msg nickserv  ...\". To find out exactly what the message is, please visit the chat service website or go to a chat help room.)"
+
+}
+
+        </script>
+	</head>
+	<body bgcolor="white" onLoad="PageLoad()" onUnload="OnUnload();"  onbeforeunload="BeforeUnload()">
+
+
+<table width="100%" cellspacing="0" cellpadding="0"  background="/chat/images/chatheader2.jpg">
+	<tr height="6">
+		<td colspan="5"></td>
+	</tr>
+	<tr height="40">
+		<td width=10>
+			&nbsp;
+		</td>
+		<td style="vertical-align: center">
+			<span class="chat">IRC Chat @</span>
+		</td>
+		<td align="left">
+			<span id="HeaderTitle" class="main ellipsis" style="width:295px"></span>
+		</td>
+		<td align="right" valign="top">
+			<table id=HelpTable cellspacing="0" cellpadding="0" onclick="CallPaneHelp()">
+				<tr>
+					<td>
+						<span class="help">
+							Help&nbsp;
+						</span>
+					</td>
+					<td class="helpImg">
+					</td>
+				</tr>
+			</table>
+		</td>
+		<td width="10">
+			<img src="/chat/images/spacer.gif" width="10" />
+		</td>
+	</tr>
+
+</table>
+<img src="/chat/images/chatbg.gif" style="position: absolute; top: 80px; right: 0px; z-index: -1" />
+		<div  id="RoomPanel" style='padding-top:7px'>
+			<div style="width: 76%; float: left">
+				<table width="100%" cellpadding="0" cellspacing="0" style="margin-right: 5px">
+					<tr bgcolor="#D1E6EE"  style="padding-bottom: 2px; padding-top: 2px">
+						<td class="roomname" style="height:22px;padding-left: 8px">
+							<span id="SectionTitle" class="ellipsis" style="height:20px;width:220px">Connecting to server...</span>
+						</td>
+						<td id="TotalCell" align="right" bgcolor="#D1E6EE" class="roomname" style="padding-right: 10px">
+						</td>
+					</tr>
+					<tr>
+						<td width="100%" colspan="2" class="conv">
+						<div id="RoomDiv" class="scroll" style="display:block;word-wrap: break-word; margin: 5px 0px 5px 5px; height: 290px; overflow-x: hidden">
+						<table id=ContentTable cellspacing=0 cellpadding=0></table>
+						</div>
+						</td>
+					</tr>
+					<tr id="OutMessageBoxRow" style="display:none" >
+						<td width="100%" colspan="2">
+							<table cellpadding=0 style="margin: 5px 0px 5px 0px">
+								<tr>
+									<td width="100%">
+										<input type="text" id="OutMessageBox" maxLength="200" style="width: 100%; margin-left: 12px" class="in"
+											onKeyPress="return ProcessKeyStroke(event)" />
+									</td>
+									<td>
+										<msntv:CustomButton id="sendButton" label="Send" style="margin-bottom: 1px; margin-left: 3px"
+											onclick="SendMessage()" />
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div style="position: absolute; right: 0px; width: 134">
+				<msntv:CustomButton id="clearButton" style="display:none;width:120px;margin-bottom:5px;text-align:left" label="Clear Room"
+					onclick="ClearContent()" />
+				<msntv:CustomButton id="peopleButton" style="display:none;width: 120px; margin-bottom: 5px; text-align: left" label="People List"
+					onclick="PeoplePanel()" />
+			<!---<msntv:CustomButton id="listButton" style="display:none;width: 120px; margin-bottom: 5px; text-align: left" label="Refresh"
+					onclick="ListRooms()" />--->
+				<msntv:CustomButton id="enterButton" style="display:none;width: 120px; margin-bottom: 5px; text-align: left" label="Go to Room"
+					onclick="JoinPanel()" />
+				<msntv:CustomButton id="newButton" style="display:none;width: 120px; margin-bottom: 5px; text-align: left" label="Create Room"
+					onclick="CreatePanel()" />
+			<!---	<msntv:CustomButton id="nickButton2" style="display:none;width: 120px; margin-bottom: 5px; text-align: left" label="Nickname"
+					onclick="NickPanel2()" /> --->
+				<msntv:CustomButton id="ignoreButton" style="display:none;width:120px;margin-bottom:5px;text-align:left" label="Ignore"
+					onclick="IgnorePanel()" />
+				<msntv:CustomButton id="whisperButton" style="display:none;width:120px;margin-bottom:5px;text-align:left" label="Whisper"
+					onclick="WhisperPanel()" />
+				<msntv:CustomButton id="doneButton" style="width:120px;margin-bottom:5px;text-align:left" label="Done"
+					onclick="Done()" />
+				  <table id=EmButtonTable cellpadding=0 cellspacing=0 style="display:none">
+				    <tr><td style="padding-left:6px"><a id=emoticonButtonMain tabindex=0 onClick="ShowEmoticonPanel()"><div id=EmotBtnDivMain style="padding:0px; height:26px; width:90px; behavior:url(#default#alphaImageLoader);opacity:0;src:/chat/images/ChatEmotDisabled.png"></div></a></td>
+					<td style="padding-left:6px"><input type=checkbox id="EmButtonCheckbox" checked onclick="ToggleEnableEmotion()"></td>
+					</tr>
+				  </table>
+			</div>
+			<div id="TipDiv" class="hd" style="position:absolute;bottom:20px;right:15px;width:110">
+			</div>
+	    </div>
+		<div id="PeoplePanel" class="panel">
+			<div style="margin:0px 8px 0px 15px">
+				<div class="phdr">People List</div>
+				<div class="user" style="margin-top:8px">Below is a list of the other people in this chat room.</div>
+				<div class="user">Your nickname appears at the bottom of the page.  To appear to be away, choose the icon next to your nickname.</div>
+				<table style="margin-top:10px" cellpadding="0" cellspacing="0">
+					<tr>
+						<td colspan="2" class="hrgrad" height="1" width="100%">
+						</td>
+					</tr>
+					<tr>
+						<td width="75%" class="content">
+							<div id="UserTable" class="scroll" style="padding:10px;width:100%;height:168px">
+							</div>
+						</td>
+						<td valign="top" width="20%" class="sidebar">
+							<msntv:CustomButton id="DismissButton" style="text-align:left;width:100px;margin-left: 5px" label="Done"
+								usePNGTransparency="false" onclick="PeoplePanelDismiss()" />
+						</td>
+					</tr>
+				</table>
+				<table id="MyInfo" width="90%" style="margin:5px 0px 0px 10px">
+					<tr>
+						<td>
+							<span id="statusIcon" class="png" style="src:url(/chat/images/chatheresmall.png)" border="0" onClick="ToggleMyAwayStatus()"></span>
+						</td>
+						<td align="left">
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div id="IgnorePanel" class="panel">
+			<div style="margin:0px 8px 0px 15px">
+				<div class="phdr">Ignore</div>
+				<div class="user" style="margin-top:8px">Below is a list of the other people in this chat room.</div>
+				<div class="user">To ignore someone so you don't see messages they send to the chat room, check the box next to their name.<br/>To stop ignoring someone, uncheck the box.</div>
+				<table style="margin-top:8px" cellpadding="0" cellspacing="0">
+					<tr>
+						<td colspan="2" class="hrgrad" height="1" width="100%">
+						</td>
+					</tr>
+					<tr>
+						<td width="75%" class="content">
+							<div id="IgnoreTable" class="scroll" style="padding:10px;width:100%;height:180px">
+							</div>
+						</td>
+						<td valign="top" width="20%" class="sidebar">
+							<msntv:CustomButton id="DismissButton" style="text-align:left;width:100px;margin-left:5px" label="Done"
+								usePNGTransparency="false" onclick="IgnorePanelDismiss()" />
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div id="WhisperPanel" class="panel">
+			<div style="margin-left:10px">
+				<div class="phdr">Whisper</div>
+				<div class="user" style="margin:8px 15px 0px 0px"> When you whisper to someone, only the person you're whispering to can read your message. Although your whispered message appears in the chat room conversation, the other people in the room can't see it.</div>
+				<table width="98%" cellpadding="0" cellspacing="0" style="margin:10px 0px 0px -8px;overflow-x:hidden">
+					<tr>
+						<td colspan="2" class="hrgrad" height="1" width="100%">
+						</td>
+					</tr>
+					<tr>
+						<td width="46%" class="user content">
+							<table width="100%" cellpadding="0" cellspacing="0">
+								<tr>
+									<td width="100%" valign="top">
+										<div style="margin: 5px 0px 5px 10px">Choose a person</div>
+									</td>
+								</tr>
+								<tr>
+									<td valign="top" class="user">
+										<div class="scroll" id="WhisperTable" style="padding-left:8px;padding-right:8px;margin-right:5px;width:100%;height:160">
+										</div>
+									</td>
+								</tr>
+							</table>
+						</td>
+						<td width="45%" class="user sidebar" valign="top">
+							<table width="97%" cellpadding="0" cellspacing="0" style="margin-left:10px">
+								<tr>
+									<td width="100%" colspan=3>
+										<div style="margin: 5px 0px 10px 0px">Choose a person and then type your private message.</div>
+									</td>
+								</tr>
+								<tr>
+									<td colspan=3>
+										<textarea id="WhisperText" class="in" style="align:right;width:100%;height:91"
+											onKeyPress="if(window.event.keyCode==13) SendWhisper();" ondeactivate="whisperSendButton.focus()">
+										</textarea>
+									</td>
+								</tr>
+								<tr width="100%" style="padding-top:5px">
+												<td>
+													<msntv:CustomButton id="whisperSendButton" tabIndex=0 style="position:relative;left:-6px;top:0px;align:center;width:90px" label="Whisper" onclick="SendWhisper()" /></td>
+												<td><a id=emoticonButtonWhisper onClick="ShowEmoticonPanel()" style="position:relative;left:-2px;top:0px"><div id=EmotBtnDivWhisper style="margin:0px;padding:0px; height:26px; width:60px; behavior:url(#default#alphaImageLoader);opacity:0;src:/chat/images/ChatEmotDisabled.png"></div></a></td>
+												<td align=right>	<msntv:CustomButton id="DismissButton" style="position:relative;right:-2px;top:0px" label="Cancel"
+														 onclick="WhisperPanelDismiss()" />
+												</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div id="JoinPanel" class="panel" style="height:140px">
+			<div id="title" style="left:15px;font-size:21px;color:#CBE1FF;margin-top:8px;font-weight:bold">
+			Enter a Room
+			</div>
+			<div id="description" style="left:20px;width:100%">
+			  <table valign=center><tr colspan=2 height=20>&nbsp;</tr><tr><td >
+			     Room name:<td><input id="JoinRoomInput"  class="in" type=text style="width:380px;" maxLength=28>
+			  </tr></table>
+			</div>
+			<div id="buttonBar" style="right:43px">
+				<msntv:CustomButton id="JoinContinue" label="Go to" onClick="JoinContinue()" />
+				<msntv:CustomButton id="DismissButton" label="Cancel" onClick="JoinDismiss()" />
+			</div>
+		</div>
+		<div id="CreatePanel" class="panel" style="height:270px">
+			<div id="title" style="left:15px;font-size:21px;color:#CBE1FF;margin-top:8px;font-weight:bold">
+			Create Room
+			</div>
+			<div id="description" style="left:20px;width:100%">
+			  <table valign=center><tr height=20><td colspan=2>&nbsp;</td></tr>
+			     <tr><td valign=top>Room Name:&nbsp;<td><input id="CreateRoomInput"  class="in" type=text style="width:380px;" maxLength=28>
+				 <tr><td></td><td></td></tr>
+				 <tr><td valign=top>Room Topic:</td><td>
+				  <textarea id="CreateTopic" class="in" style="align:left;width:380px;height:91"></textarea>
+				 </td></tr>
+			  	 <tr><td ></td><td><input type=checkbox id=CreateUnlisted>&nbsp; Make this room unlisted</td></tr>
+			</table>
+			</div>
+			<div id="buttonBar" style="right:43px">
+				<msntv:CustomButton id="CreateContinue" label="Create Room" onClick="CreateContinue()" />
+				<msntv:CustomButton id="DismissButton" label="Cancel" onClick="DismissCreatePanel()" />
+			</div>
+		</div>
+	   <div id="NickPanel2" class="panel" style="height:280px">
+			<div id="icon"></div>
+			<div id="title" style="font-size:21px;color:#CBE1FF;margin-top:8px;font-weight:bold">
+		    Nickname Service
+			</div>
+			<div id="description" style="padding-top:10px">
+			  <table cellpadding=0 valign=center>
+			  <tr height=20>
+			  <td >
+				  <table cellpadding=5 cellspacing=0><tr>
+				  <td id=ChangeNickCell2 style="background-color:#CBE1FF;" ><a href="javascript:ShowChangeNick2()" style="text-decoration:underline">Change Nickname</a></td>
+				  <td >|</td>
+				  <td id=RegisterNickCell2 ><a href="javascript:ShowRegisterNick2()" style="text-decoration:underline">Register Nickname</a></td>
+				  </tr></table>
+			  </td>
+			  </tr>
+			  <tr><td><table cellpadding=0 cellspacing=0><tr style="padding-top:5px"><td>Your current nickname is &nbsp;</td> <td ><span id=CurrNickSpan2 class='ellipsis' style='width:180px;font-weight:bold;overflow-x:hidden'> </span></td></tr></table></td>
+			  </tr>
+			  <tr><td height=5></tr>
+			  <tr id=NewNickRow2><td><table cellpadding=0 cellspacing=0><tr><td>
+				 New Nick:&nbsp; </td><td style="padding-left:0px;margin-left:0px"><input id="NicknameInput2"  class="in" type=text size=28 maxLength=25></td></tr></table></td>
+			  </tr>
+
+			  <tr id=RegMsgRow style="display:none"><td><table cellpadding=0 cellspacing=0><tr><td>
+				 Message:&nbsp;</td><td><input id="RegMsgInput"  class="in" type=text size=38></td></tr></table></td>
+			  </tr>
+ 			  <tr id=NickTipRow2 style="padding-top:8px"><td style="font-size:17px;font-style:oblique" id=NickTipCell2>(A nickname can have at most 25 characters without space. It may not start with any of the following characters: .@+%)</td>
+			  </tr>
+
+			  </table>
+			</div>
+			<div id="buttonBar">
+			  <table cellpadding=0 cellpadding=0><tr>
+			  <td><msntv:CustomButton id="ChangeContinueButton2" label="Change" onClick="ChangeContinue2()" />
+			  <td><msntv:CustomButton id="RegisterContinueButton2" style="display:none" label="Send" onClick="RegisterContinue2()" />
+			  <td><msntv:CustomButton id="DismissButton"  label="Done" onClick="NickDismiss2()" />
+			  </tr></table>
+			</div>
+		</div>
+
+<div id=EmoticonPanel>
+	<table height=100% width=100% cellSpacing=0 cellPadding=0 style="background-color:#9ACAF4; border-style:solid; border-color:#E5ECF4; border-width:2px;">
+		<tr><td><table cellSpacing=0 cellPadding=0>
+					<tr height=30><td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon00 onKeyDown="MoveEmoticonFocus(0,0,'(w)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emwilt.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon01 onKeyDown="MoveEmoticonFocus(0,1,'(f)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emrose.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon02 onKeyDown="MoveEmoticonFocus(0,2,'(8)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emnote.png"></span></a></td>
+							<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon03 onKeyDown="MoveEmoticonFocus(0,3,'(~)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emfilm.png"></span></a></td>
+						<td width=12></td></tr>
+					<tr height=30><td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon10 onKeyDown="MoveEmoticonFocus(1,0,'(&)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emdog.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon11 onKeyDown="MoveEmoticonFocus(1,1,'(n)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emthdown.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon12 onKeyDown="MoveEmoticonFocus(1,2,'(y)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emthup.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon13 onKeyDown="MoveEmoticonFocus(1,3,'({)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emhugl.png"></span></a></td>
+						<td width=12></td></tr>
+					<tr height=30><td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon20 onKeyDown="MoveEmoticonFocus(2,0,'(@)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emcat.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon21 onKeyDown="MoveEmoticonFocus(2,1,'(u)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emunlove.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon22 onKeyDown="MoveEmoticonFocus(2,2,'(l)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emlove.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon23 onKeyDown="MoveEmoticonFocus(2,3,':@')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emangry.png"></span></a></td>
+						<td width=12></td></tr>
+					<tr height=30><td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon30 onKeyDown="MoveEmoticonFocus(3,0,'(a)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emangel.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon31 onKeyDown="MoveEmoticonFocus(3,1,'(h)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emshades.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon32 onKeyDown="MoveEmoticonFocus(3,2,':|')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emdgust.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon33 onKeyDown="MoveEmoticonFocus(3,3,':p')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emsmilep.png"></span></a></td>
+						<td width=12></td></tr>
+					<tr height=30><td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon40 onKeyDown="MoveEmoticonFocus(4,0,':\'(')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emcry.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon41 onKeyDown="MoveEmoticonFocus(4,1,':(')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emsad.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon42 onKeyDown="MoveEmoticonFocus(4,2,':$')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emblush.png"></span></a></td>
+							<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon43 onKeyDown="MoveEmoticonFocus(4,3,':s')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emconfused.png"></span></a></td>
+						<td width=12></td></tr>
+					<tr height=30><td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon50 onKeyDown="MoveEmoticonFocus(5,0,':o')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emsmileo.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon51 onKeyDown="MoveEmoticonFocus(5,1,';)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emwink.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon52 onKeyDown="MoveEmoticonFocus(5,2,':d')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emsmiled.png"></span></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon53 onKeyDown="MoveEmoticonFocus(5,3,':)')"><span style="padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:/chat/emot/emsmile.png"></span></a></td>
+						<td width=12></td></tr>
+	</table></td></tr></table>
+</div>
+		<div id="InfoPanel" class="panel" style="height:212px">
+		    <div id="icon"></div><div class="phdr" id=InfoHeadDiv style='position:relative;left:65px'>Chat Service Message</div>
+			<div style="margin:15px 8px 10px 15px">
+
+    			<div id="InfoDiv" class="scroll" style="display:block;word-wrap: break-word; margin: 5px 0px 5px 0px; height: 100px; overflow-x: hidden"></div>
+			</div>
+			<div id="buttonBar">
+				<msntv:CustomButton id="DismissButton" style="text-align:left;margin-left:5px" label="Close" onclick="InfoPanelDismiss()" />
+ 			</div>
+		</div>
+
+
+		<script for="IRCCtrl" event="OnCsConnect()">
+			g_connected=true;
+			SectionTitle.innerText="Waiting for reply..."
+		    EnableMain();
+			SetProgressPercent(20);
+			drawNotice("Connected!", "#09750B");
+			RegisterConnection();
+			g_FirstUser = 1;
+		</script>
+		<script for="IRCCtrl" event="OnNewUserList()">
+			LoadUserList(ParseUserList(IRCCtrl.UserList()));
+		</script>
+		<script for="IRCCtrl" event="OnMyNick(oldNick, newNick)">
+			g_trialnick=newNick;
+			if(g_registeringnick)
+			  g_registeringnick=false;
+			SaveNick(newNick);
+		//	CurrNickCell.innerText=newNick;
+			CurrNickSpan2.innerText=newNick;
+			PeopleListMyNickSpan.innerText=newNick;
+			if(!g_registeringnick)
+			{
+			  TVShell.PanelManager.AnimationMessageBox("Your new nickname is \""+newNick+"\"", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000);
+		    }
+		</script>
+		<script for="IRCCtrl" event="OnNickChange(oldNick, newNick)">
+		  LoadUserList(ParseUserList(IRCCtrl.UserList()));
+		  drawNotice(Encode(oldNick,false) + ' is now known as '+Encode(newNick,false), "#666666");
+		</script>
+		<script for="IRCCtrl" event="OnJoin(user, roomjoined)">
+		    g_RoomName=roomjoined;
+	        TVShell.Message("g_RoomName="+g_RoomName);
+
+			LoadUserList(ParseUserList(IRCCtrl.UserList()));
+			if(IRCCtrl.GetMe().Nickname==user)
+			{
+			    SectionTitle.innerText=g_RoomName.substring(1);
+			    ShowRoomListContent(false);
+				ShowRoomContent(true);
+				ShowRoomButtons(true);
+				EnableRoomButtons(true);
+				OutMessageBox.focus();
+				if(g_joinorcreate==1)
+				    IRCCtrl.SendTopic(g_RoomName,g_createtopic);
+				if(g_joinorcreate==1 && g_createprivate)
+					IRCCtrl.SendMode(g_RoomName,"+s");
+			    drawNotice("You have joined <b>"+Encode(g_RoomName.substring(1),false)+".", "#666666");
+			}
+			else
+				drawNotice(Encode(user,false) + ' has joined the conversation.', "#666666");
+
+		</script>
+
+		<script for="IRCCtrl" event="OnPart(user, channel)">
+			LoadUserList(ParseUserList(IRCCtrl.UserList()));
+			drawNotice(user + ' has left the conversation.', "#666666");
+		</script>
+		<script for="IRCCtrl" event="OnQuit(user, reason)">
+			LoadUserList(ParseUserList(IRCCtrl.UserList()));
+			drawNotice(user + ' has quit IRC: '+ reason, "#666666");
+		</script>
+		<script for="IRCCtrl" event="OnTopic(room, topic)">
+			drawNotice("Topic of <b>"+Encode(room.substring(1),false) + '</b> : '+ Encode(topic,false), "#006666");
+		</script>
+
+		<script for="IRCCtrl" event="OnAway(user, msg)">
+			LoadUserList(ParseUserList(IRCCtrl.UserList()));
+			drawNotice(user + ' is away', "#666666");
+		</script>
+		<script for="IRCCtrl" event="OnReturn(user)">
+			LoadUserList(ParseUserList(IRCCtrl.UserList()));
+			drawNotice(user + ' returned', "#666666");
+		</script>
+		<script for="IRCCtrl" event="OnKick(szKicker, szKickee, szReason)">
+			LoadUserList(ParseUserList(IRCCtrl.UserList()));
+			drawNotice("Host " + szKicker + " kicked " + szKickee + " out of the chat room: " + szReason, "#87290C");
+		</script>
+		<script for="IRCCtrl" event="OnCsConnectFailed()">
+		    g_connected=false;
+			drawNotice('Chat Server connect failed', "#666666");
+			var disResp = tvShell.PanelManager.CustomMessageBox("Failed to connect to the chat server.  Do you want to retry?", "Connect Failed", "Retry;Cancel", 0, "");
+			if (disResp == 0) {
+				StopChat();
+				Connect();
+			} else {
+				window.history.back();
+			}
+		</script>
+		<script for="IRCCtrl" event="OnCsDisconnect()">
+		    g_connected=false;
+			HideProgressPanel()
+			DisableMain();
+			drawNotice('You have been disconnected from the chat room.', "#666666");
+			if (g_Friend == "") {
+				var disResp = tvShell.PanelManager.CustomMessageBox("You have been disconnected from the chat room.  Do you want to reconnect to the chat room?", "Disconnected", "Reconnect;Cancel", 0, "");
+				if (disResp == 0) {
+					Restart();
+				} else {
+					window.history.back();
+				}
+			}
+		</script>
+		<script for="IRCCtrl" event="OnError(iError, szText)">
+
+			if(iError==433 && g_registeringnick)
+			{
+			    g_trialnickindex++;
+				g_trialnick=g_partialnick+g_trialnickindex;
+				IRCCtrl.SendNick(g_trialnick);
+				IRCCtrl.SendUser(g_trialnick,GetHostIP(),g_StartupInfo.Server,g_email);
+				return;
+			}
+			var errTxt=g_ErrorTxt[iError];
+			if(!errTxt)
+				errTxt="Error "+iError+":"+szText
+
+			drawNotice(errTxt, "#aa0000");
+			if(iError==482)
+			  alert("You are not channel operator");
+			else if(iError!=451 && iError!=0) //0- Ping timeout. This will close connection. We only show disconnection error once
+			  alert(errTxt);
+		</script>
+		<script for="IRCCtrl" event="OnServerMessage(iEvent, szText)">
+			switch(iEvent)
+			{
+			    case 305:
+				case 306:
+				  g_MeIsAway=((iEvent==305)?0:1);
+				  statusIcon.style.src = statusIcons[g_MeIsAway].src
+				  drawNotice(szText, "#aa0000");
+				  break;
+				case 311:
+				  drawNotice(szText, "#aa0000");
+				  break;
+				case 254:
+				  g_CSRoomCount=parseInt(szText.split(' ')[0]);
+				  SectionTitle.innerText="Total room(s): "+g_CSRoomCount;
+				  break;
+				case 321:
+				  HideProgressPanel()
+				  g_roomlist=new Array();
+				  ClearContent();
+				  break;
+				case 323:
+				  if(!(document.all.RoomListTable))
+				  {
+				    g_roomlist.sort(SortRoom);
+				    if(g_roomlist&&g_roomlist.length>0)
+					{
+					  MakeRoomListHead()
+					  g_currRoomListRange=0;
+    				  MakeRoomListTable(0);
+						try{
+							document.all.RoomListTable.rows[0].all.tags("a")[0].focus();
+						}
+						catch(e)
+						{
+						}
+					}
+				  }
+				  EnableRoomListButtons(true);
+				  break;
+				case 401:
+			    case 477:
+				  alert(szText);
+				  break;
+				case 403:
+				  alert("No such room: \""+szText+"\"");
+				  break
+				case 471:
+				  alert("The room is full.");
+				  break
+				case 473:
+				  alert("The room is invitation only.");
+				  break;
+				case 474:
+				  alert("You are banned from the room.");
+				  break;
+				case 475:
+				  alert("Bad room key.");
+				  break;
+				case 221:
+				  drawNotice("Your mode: "+szText, "#aa0000");
+				  break;
+				default:
+				  if(iEvent==486||iEvent==480)
+				    drawNotice(Encode(szText,false), "#aa0000");
+				  if(g_registeringnick)
+				  {
+					  SaveNick(g_trialnick);
+					  g_registeringnick=false;
+					  g_trialnickindex=0;
+				  }
+				  if(iEvent==1)//Welcome or  End of MOTD
+				  {
+				     SetProgressPercent(50);
+				     if(!g_RoomName)
+					 {
+
+					  	 ShowRoomContent(false);
+						 ShowRoomListContent(true);
+						 SectionTitle.innerText="Loading room list..."
+						 ListRooms();
+					 }
+					 else if(parameters["room"])
+					 {
+					     HideProgressPanel()
+					     ClearContent();
+						 JoinRoomByName(g_RoomName.substring(1));
+					 }
+				  }
+				  break;
+			}
+		</script>
+		<script for="IRCCtrl" event="OnListReplyChannel(iEvent, szRoom,szNumPeople,szTopic)">
+			if(g_roomlist.length<MAX_ROW_IN_LIST)
+			{
+				var index=g_roomlist.length
+				g_roomlist[index]=new Array();
+				g_roomlist[index][0]=szRoom;
+				g_roomlist[index][1]=parseInt(szNumPeople);
+				g_roomlist[index][2]=szTopic;
+			}
+			else if(g_roomlist.length==MAX_ROW_IN_LIST)
+			  alert("The server has more than "+MAX_ROW_IN_LIST+" rooms. Only the first "+MAX_ROW_IN_LIST+" public rooms will be listed!");
+		</script>
+		<script for="IRCCtrl" event="OnPrivMsg(szFrom, szText, iColor)">
+				if (szFrom.indexOf("#") == 0)
+					szFrom = szFrom.substr(2);
+				if(szFrom.toLowerCase()!=g_nickserv)
+				  draw('<font color=darkblue>' + szFrom + ': </font><font color=#' + ConvertColor(iColor) + '>' + Encode(szText,true) + '</font>');
+				else
+				  //ShowInfoPanel(szFrom+": "+szText);
+				ShowInfoPanel(szFrom+": "+szText)
+
+		</script>
+		<script for="IRCCtrl" event="OnEPrivMsg(szFrom, szText, iColor)">
+			draw('<font color=darkblue>' + szFrom + ' says: </font><font color=#' + ConvertColor(iColor) + '>' + Encode(szText,true) + '</font>');
+		</script>
+		<script for="IRCCtrl" event="OnWhisper(szFrom, szText, iColor)">
+			if (szText == "ERR")
+				drawNotice("Sorry, " + szFrom + " is not accepting Whispered messages at this time.", "#87290C");
+			else {
+				if(szFrom.toLowerCase()==g_nickserv)
+				{
+					ShowInfoPanel(szFrom+": "+szText);
+				}
+				else
+				{  draw('<font color=darkblue>(whisper from) ' + szFrom + ': </font><font color=#' + ConvertColor(iColor) + '>' + Encode(szText,true) + '</font>');
+				   tvShell.DeviceControl.PlaySound("chat_whisper");
+				}
+			}
+		</script>
+		<script for="IRCCtrl" event="OnAction(szFrom, szText)">
+			draw('<i><font color=darkblue>' + Encode(szFrom,false) + ' </font>' + Encode(szText,true) + '</i>');
+		</script>
+		<script for="IRCCtrl" event="OnNotice(szFrom, szText)">
+				if(szFrom.toLowerCase()==g_nickserv)
+				{
+					ShowInfoPanel(szFrom+": "+szText);
+				}
+			    else
+				    drawNotice("Notice from " + Encode(szFrom,false) + ": " + Encode(szText,false), "#666666");
+		</script>
+		<script for="IRCCtrl" event="OnIgnoreStateChange(nickName, fIgnore, fIsAutoIgnore)">
+			if (fIsAutoIgnore) {
+				var len = g_users.length;
+				var ignoreCheck = null;
+				var iconImg = null;
+				var mode = 0;
+				for(i=0;i<len;i++) {
+					if(g_users[i][1] == nickName) {
+						ignoreCheck = eval("ig" + i);
+						iconImg = eval("user" + i);
+						mode = g_users[i][0];
+						break;
+					}
+				}
+				var icon;
+				if (fIgnore) {
+					if (ignoreCheck != null)
+						ignoreCheck.checked = true;
+					icon = statusImages["ignored"];
+					drawNotice(nickName + " has been sending messages to you too rapidly and will be automatically ignored for the next 5 minutes.", "#666666");
+				} else {
+					if (ignoreCheck != null)
+						ignoreCheck.checked = false;
+					mode &= ~mmAutoIgnored;
+					icon = GetMemberListIcon(mode);
+					drawNotice(nickName + " is no longer being ignored.", "#666666");
+				}
+				if (iconImg != null)
+					iconImg.style.src = icon;
+			}
+		</script>
+		<script for="IRCCtrl" event="OnChannelModes(channel, mode)">
+		 	drawNotice("<b>"+ Encode(channel,false) + "</b> mode: "+mode, "#87290C");
+		</script>
+<script>
+
+function CallPaneHelp()
+{
+	try
+	{
+		window.location = window.external.SafeGetServiceURL("help::help") + "?page=MSNTV_TRS_TOC_Chat.htm";
+	}
+	catch(e)
+	{
+
+
+	}
+}
+
+
+	</script>
+
+		<object id="IRCCtrl" classid="CLSID:B491D1F9-3D98-4879-A9A4-E584BB8DF23C" VIEWASTEXT standby="Loading chat components..."
+				type="application/x-oleobject" />
+	</body>
+</html>
